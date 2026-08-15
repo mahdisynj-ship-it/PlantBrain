@@ -1,7 +1,7 @@
 from datetime import date, datetime
 
 from sqlalchemy import Date, DateTime, Integer, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
 
@@ -48,9 +48,17 @@ class Plant(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
+        default=datetime.utcnow,
     )
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
+
+    events: Mapped[list["PlantEvent"]] = relationship(
+        back_populates="plant",
+        cascade="all, delete-orphan",
     )
