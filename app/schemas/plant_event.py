@@ -6,8 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field
 class CreatePlantEvent(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    plant_id: int = Field(gt=0)
-
     event_type: str = Field(
         min_length=1,
         max_length=50,
