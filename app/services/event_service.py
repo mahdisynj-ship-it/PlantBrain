@@ -1,28 +1,21 @@
-from datetime import datetime
-
 from sqlalchemy.orm import Session
 
 from app.database.models import PlantEvent
+from app.schemas.plant_event import CreatePlantEvent
 
 
 def create_event(
     session: Session,
-    plant_id: int,
-    event_type: str,
-    occurred_at: datetime,
-    notes: str | None = None,
-    amount: float | None = None,
-    unit: str | None = None,
-    event_metadata: dict | None = None,
+    data: CreatePlantEvent,
 ) -> PlantEvent:
     event = PlantEvent(
-        plant_id=plant_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        notes=notes,
-        amount=amount,
-        unit=unit,
-        event_metadata=event_metadata,
+        plant_id=data.plant_id,
+        event_type=data.event_type,
+        occurred_at=data.occurred_at,
+        notes=data.notes,
+        amount=data.amount,
+        unit=data.unit,
+        event_metadata=data.event_metadata,
     )
 
     session.add(event)
