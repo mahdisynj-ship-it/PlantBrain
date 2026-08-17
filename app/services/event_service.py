@@ -29,3 +29,15 @@ def create_event(
     session.refresh(event)
 
     return event
+
+
+def get_plant_events(
+    session: Session,
+    plant_id: int,
+) -> list[PlantEvent]:
+    return (
+        session.query(PlantEvent)
+        .filter(PlantEvent.plant_id == plant_id)
+        .order_by(PlantEvent.occurred_at.desc())
+        .all()
+    )
