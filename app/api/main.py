@@ -2,13 +2,15 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
-from app.schemas.plant import CreatePlant, PlantResponse
+from app.schemas.plant import CreatePlant, PlantResponse, UpdatePlant
 from app.schemas.plant_event import CreatePlantEvent, PlantEventResponse
 from app.services.event_service import create_event, get_plant_events
 from app.services.plant_service import (
     create_plant,
+    delete_plant,
     get_plant_by_id,
     get_plants,
+    update_plant,
 )
 
 
@@ -73,6 +75,49 @@ def get_plant_endpoint(
         )
 
     return plant
+
+
+@app.patch("/plants/{plant_id}", response_model=PlantResponse)
+def update_plant_endpoint(
+    plant_id: int,
+    data: UpdatePlant,
+    session: Session = Depends(get_session),
+):
+    plant = update_plant(
+        session=session,
+        plant_id=plant_id,
+        data=data,
+    )
+
+    if plant is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Plant with id {plant_id} not found",
+        )
+
+    return plant
+
+
+@app.delete("/plants/{plant_id}")
+def delete_plant_endpoint(
+    plant_id: int,
+    session: Session = Depends(get_session),
+):
+    deleted = delete_plant(
+        session=session,
+        plant_id=plant_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Plant with id {plant_id} not found",
+        )
+
+    return {
+        "message": "Plant deleted successfully",
+        "plant_id": plant_id,
+    }
 
 
 @app.get(
