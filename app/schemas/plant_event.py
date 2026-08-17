@@ -26,3 +26,16 @@ class CreatePlantEvent(BaseModel):
     )
 
     event_metadata: dict | None = None
+
+
+class PlantEventResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    plant_id: int
+    event_type: str
+    occurred_at: datetime
+    notes: str | None = None
+    amount: float | None = None
+    unit: str | None = None
+    event_metadata: dict | None = None

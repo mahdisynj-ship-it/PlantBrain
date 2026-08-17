@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
 from app.schemas.plant import CreatePlant, PlantResponse
-from app.schemas.plant_event import CreatePlantEvent
+from app.schemas.plant_event import CreatePlantEvent, PlantEventResponse
 from app.services.event_service import create_event, get_plant_events
 from app.services.plant_service import (
     create_plant,
@@ -51,7 +51,9 @@ def create_plant_endpoint(
 def get_plants_endpoint(
     session: Session = Depends(get_session),
 ):
-    return get_plants(session=session)
+    return get_plants(
+        session=session,
+    )
 
 
 @app.get("/plants/{plant_id}", response_model=PlantResponse)
@@ -73,25 +75,37 @@ def get_plant_endpoint(
     return plant
 
 
-@app.get("/plants/{plant_id}/events")
+@app.get(
+    "/plants/{plant_id}/events",
+    response_model=list[PlantEventResponse],
+)
 def get_plant_events_endpoint(
     plant_id: int,
     session: Session = Depends(get_session),
 ):
-    events = get_plant_events(
+    return get_plant_events(
         session=session,
         plant_id=plant_id,
     )
 
-    return [
-        {
-            "id": event.id,
-            "plant_id": event.plant_id,
-            "event_type": event.event_type,
-            "occurred_at": event.occurred_at,
-            "amount": event.amount,
-            "unit": event.unit,
-            "notes": event.notes,
-        }
-        for event in events
-    ]
+
+@app.post(
+    "/plants/{plant_id}/events",
+    response_model=PlantEventResponse,
+)
+def create_plant_event_endpoint(
+    plant_id: int,
+    data: CreatePlantEvent,
+    session: Session = Depends(get_session),
+):
+    try:
+        return create_event(
+            session=session,
+            plant_id=plant_id,
+            data=data,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        )
