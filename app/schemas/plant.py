@@ -36,3 +36,17 @@ class CreatePlant(BaseModel):
     )
 
     notes: str | None = None
+
+
+class PlantResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    scientific_name: str | None = None
+    common_name: str | None = None
+    species: str | None = None
+    acquired_at: date | None = None
+    location: str | None = None
+    status: str
+    notes: str | None = None

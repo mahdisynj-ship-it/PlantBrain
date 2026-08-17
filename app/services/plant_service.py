@@ -24,3 +24,16 @@ def create_plant(
     session.refresh(plant)
 
     return plant
+
+
+def get_plants(
+    session: Session,
+) -> list[Plant]:
+    return session.query(Plant).order_by(Plant.id).all()
+
+
+def get_plant_by_id(
+    session: Session,
+    plant_id: int,
+) -> Plant | None:
+    return session.get(Plant, plant_id)
