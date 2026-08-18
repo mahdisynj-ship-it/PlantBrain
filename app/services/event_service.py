@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.database.models import Plant, PlantEvent
-from app.schemas.plant_event import CreatePlantEvent
+from app.schemas.plant_event import CreatePlantEvent, UpdatePlantEvent
 
 
 def create_event(
@@ -38,6 +38,51 @@ def get_plant_events(
     return (
         session.query(PlantEvent)
         .filter(PlantEvent.plant_id == plant_id)
-        .order_by(PlantEvent.occurred_at.desc())
+        .order_by(PlantEvent.id.desc())
         .all()
     )
+
+
+def get_event_by_id(
+    session: Session,
+    event_id: int,
+) -> PlantEvent | None:
+    return session.get(PlantEvent, event_id)
+
+
+def update_event(
+    session: Session,
+    event_id: int,
+    data: UpdatePlantEvent,
+) -> PlantEvent | None:
+    event = session.get(PlantEvent, event_id)
+
+    if event is None:
+        return None
+
+    update_data = data.model_dump(
+        exclude_unset=True,
+    )
+
+    for field, value in update_data.items():
+        setattr(event, field, value)
+
+    session.commit()
+    session.refresh(event)
+
+    return event
+
+
+def delete_event(
+    session: Session,
+    event_id: int,
+) -> bool:
+    event = session.get(PlantEvent, event_id)
+
+    if event is None:
+        return False
+
+    session.delete(event)
+    session.commit()
+
+    return True

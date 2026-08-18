@@ -28,6 +28,32 @@ class CreatePlantEvent(BaseModel):
     event_metadata: dict | None = None
 
 
+class UpdatePlantEvent(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    event_type: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=50,
+    )
+
+    occurred_at: datetime | None = None
+
+    notes: str | None = None
+
+    amount: float | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    unit: str | None = Field(
+        default=None,
+        max_length=30,
+    )
+
+    event_metadata: dict | None = None
+
+
 class PlantEventResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

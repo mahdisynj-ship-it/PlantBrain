@@ -3,8 +3,18 @@ from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
 from app.schemas.plant import CreatePlant, PlantResponse, UpdatePlant
-from app.schemas.plant_event import CreatePlantEvent, PlantEventResponse
-from app.services.event_service import create_event, get_plant_events
+from app.schemas.plant_event import (
+    CreatePlantEvent,
+    PlantEventResponse,
+    UpdatePlantEvent,
+)
+from app.services.event_service import (
+    create_event,
+    delete_event,
+    get_event_by_id,
+    get_plant_events,
+    update_event,
+)
 from app.services.plant_service import (
     create_plant,
     delete_plant,
@@ -41,12 +51,10 @@ def create_plant_endpoint(
     data: CreatePlant,
     session: Session = Depends(get_session),
 ):
-    plant = create_plant(
+    return create_plant(
         session=session,
         data=data,
     )
-
-    return plant
 
 
 @app.get("/plants", response_model=list[PlantResponse])
@@ -154,3 +162,71 @@ def create_plant_event_endpoint(
             status_code=404,
             detail=str(error),
         )
+
+
+@app.get(
+    "/plant-events/{event_id}",
+    response_model=PlantEventResponse,
+)
+def get_event_endpoint(
+    event_id: int,
+    session: Session = Depends(get_session),
+):
+    event = get_event_by_id(
+        session=session,
+        event_id=event_id,
+    )
+
+    if event is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Event with id {event_id} not found",
+        )
+
+    return event
+
+
+@app.patch(
+    "/plant-events/{event_id}",
+    response_model=PlantEventResponse,
+)
+def update_event_endpoint(
+    event_id: int,
+    data: UpdatePlantEvent,
+    session: Session = Depends(get_session),
+):
+    event = update_event(
+        session=session,
+        event_id=event_id,
+        data=data,
+    )
+
+    if event is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Event with id {event_id} not found",
+        )
+
+    return event
+
+
+@app.delete("/plant-events/{event_id}")
+def delete_event_endpoint(
+    event_id: int,
+    session: Session = Depends(get_session),
+):
+    deleted = delete_event(
+        session=session,
+        event_id=event_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Event with id {event_id} not found",
+        )
+
+    return {
+        "message": "Event deleted successfully",
+        "event_id": event_id,
+    }
