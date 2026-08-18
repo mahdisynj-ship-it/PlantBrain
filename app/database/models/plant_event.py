@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Float, ForeignKey, Integer, JSON, String, Text
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -12,11 +12,13 @@ class PlantEvent(Base):
     id: Mapped[int] = mapped_column(
         Integer,
         primary_key=True,
+        index=True,
     )
 
     plant_id: Mapped[int] = mapped_column(
-        ForeignKey("plants.id"),
+        ForeignKey("plants.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     event_type: Mapped[str] = mapped_column(
@@ -52,9 +54,10 @@ class PlantEvent(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        default=datetime.utcnow,
+        default=lambda: datetime.now(timezone.utc),
     )
 
     plant: Mapped["Plant"] = relationship(
+        "Plant",
         back_populates="events",
     )
