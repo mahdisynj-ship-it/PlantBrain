@@ -1,10 +1,8 @@
-from datetime import datetime
 
 from fastapi.testclient import TestClient
 
 from app.api.main import app, get_session
 from app.database.base import Base
-from app.database.models import Plant, PlantEvent
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
@@ -195,6 +193,49 @@ def test_delete_plant():
     )
 
     assert get_response.status_code == 404
+
+
+def test_delete_plant_cascade_deletes_events():
+    plant_response = client.post(
+        "/plants",
+        json=create_plant_payload(),
+    )
+
+    assert plant_response.status_code == 200
+
+    plant_id = plant_response.json()["id"]
+
+    event_response = client.post(
+        f"/plants/{plant_id}/events",
+        json=create_event_payload(),
+    )
+
+    assert event_response.status_code == 200
+
+    event_id = event_response.json()["id"]
+
+    delete_response = client.delete(
+        f"/plants/{plant_id}",
+    )
+
+    assert delete_response.status_code == 200
+
+    assert delete_response.json() == {
+        "message": "Plant deleted successfully",
+        "plant_id": plant_id,
+    }
+
+    plant_get_response = client.get(
+        f"/plants/{plant_id}",
+    )
+
+    assert plant_get_response.status_code == 404
+
+    event_get_response = client.get(
+        f"/plant-events/{event_id}",
+    )
+
+    assert event_get_response.status_code == 404
 
 
 def test_delete_missing_plant():
