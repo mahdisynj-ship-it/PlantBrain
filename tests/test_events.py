@@ -40,6 +40,26 @@ def test_create_event_schema():
     assert data.notes == "آبیاری تست"
 
 
+def test_create_event_rejects_empty_event_type():
+    with pytest.raises(ValidationError):
+        CreatePlantEvent(
+            event_type="",
+            occurred_at=datetime(2026, 8, 18, 10, 0),
+            amount=500,
+            unit="ml",
+        )
+
+
+def test_create_event_rejects_whitespace_only_event_type():
+    with pytest.raises(ValidationError):
+        CreatePlantEvent(
+            event_type="   ",
+            occurred_at=datetime(2026, 8, 18, 10, 0),
+            amount=500,
+            unit="ml",
+        )
+
+
 def test_create_event_rejects_negative_amount():
     with pytest.raises(ValidationError):
         CreatePlantEvent(
