@@ -8,6 +8,11 @@ from app.schemas.plant_event import (
     PlantEventResponse,
     UpdatePlantEvent,
 )
+from app.schemas.weather_snapshot import (
+    CreateWeatherSnapshot,
+    UpdateWeatherSnapshot,
+    WeatherSnapshotResponse,
+)
 from app.services.event_service import (
     create_event,
     delete_event,
@@ -21,6 +26,12 @@ from app.services.plant_service import (
     get_plant_by_id,
     get_plants,
     update_plant,
+)
+from app.services.weather_service import (
+    create_weather_snapshot,
+    delete_weather_snapshot,
+    get_weather_snapshot_by_event_id,
+    update_weather_snapshot,
 )
 
 
@@ -228,5 +239,103 @@ def delete_event_endpoint(
 
     return {
         "message": "Event deleted successfully",
+        "event_id": event_id,
+    }
+
+
+@app.post(
+    "/plant-events/{event_id}/weather",
+    response_model=WeatherSnapshotResponse,
+)
+def create_weather_snapshot_endpoint(
+    event_id: int,
+    data: CreateWeatherSnapshot,
+    session: Session = Depends(get_session),
+):
+    try:
+        return create_weather_snapshot(
+            session=session,
+            event_id=event_id,
+            data=data,
+        )
+    except ValueError as error:
+        message = str(error)
+
+        if "not found" in message:
+            raise HTTPException(
+                status_code=404,
+                detail=message,
+            )
+
+        raise HTTPException(
+            status_code=409,
+            detail=message,
+        )
+
+
+@app.get(
+    "/plant-events/{event_id}/weather",
+    response_model=WeatherSnapshotResponse,
+)
+def get_weather_snapshot_endpoint(
+    event_id: int,
+    session: Session = Depends(get_session),
+):
+    snapshot = get_weather_snapshot_by_event_id(
+        session=session,
+        event_id=event_id,
+    )
+
+    if snapshot is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Weather snapshot for event id {event_id} not found",
+        )
+
+    return snapshot
+
+
+@app.patch(
+    "/plant-events/{event_id}/weather",
+    response_model=WeatherSnapshotResponse,
+)
+def update_weather_snapshot_endpoint(
+    event_id: int,
+    data: UpdateWeatherSnapshot,
+    session: Session = Depends(get_session),
+):
+    snapshot = update_weather_snapshot(
+        session=session,
+        event_id=event_id,
+        data=data,
+    )
+
+    if snapshot is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Weather snapshot for event id {event_id} not found",
+        )
+
+    return snapshot
+
+
+@app.delete("/plant-events/{event_id}/weather")
+def delete_weather_snapshot_endpoint(
+    event_id: int,
+    session: Session = Depends(get_session),
+):
+    deleted = delete_weather_snapshot(
+        session=session,
+        event_id=event_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Weather snapshot for event id {event_id} not found",
+        )
+
+    return {
+        "message": "Weather snapshot deleted successfully",
         "event_id": event_id,
     }

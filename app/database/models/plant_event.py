@@ -61,3 +61,9 @@ class PlantEvent(Base):
         "Plant",
         back_populates="events",
     )
+    weather_snapshot: Mapped["WeatherSnapshot | None"] = relationship(
+        "WeatherSnapshot",
+        back_populates="event",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
