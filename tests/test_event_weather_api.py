@@ -7,12 +7,18 @@ from tests.test_api import client, engine
 
 
 def setup_function():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.drop_all(
+        bind=engine,
+    )
+    Base.metadata.create_all(
+        bind=engine,
+    )
 
 
 def teardown_function():
-    Base.metadata.drop_all(bind=engine)
+    Base.metadata.drop_all(
+        bind=engine,
+    )
 
 
 def create_place(
@@ -63,7 +69,9 @@ def create_event(
         f"/plants/{plant_id}/events",
         json={
             "event_type": "watering",
-            "occurred_at": "2026-08-28T09:30:00",
+            "occurred_at": (
+                "2026-08-28T09:30:00"
+            ),
         },
     )
 
@@ -88,22 +96,27 @@ def test_create_automatic_weather_snapshot_api(
         plant_id=plant["id"],
     )
 
-    mock_get_weather_for_time.return_value = WeatherData(
-        temperature=24.5,
-        humidity=70,
-        weather_condition="partly_cloudy",
-        recorded_at=datetime(
-            2026,
-            8,
-            28,
-            9,
-            30,
-        ),
-        source="open-meteo",
+    mock_get_weather_for_time.return_value = (
+        WeatherData(
+            temperature=24.5,
+            humidity=70,
+            weather_condition=(
+                "partly_cloudy"
+            ),
+            recorded_at=datetime(
+                2026,
+                8,
+                28,
+                6,
+                0,
+            ),
+            source="open-meteo",
+        )
     )
 
     response = client.post(
-        f"/plant-events/{event['id']}/weather/auto",
+        f"/plant-events/"
+        f"{event['id']}/weather/auto",
     )
 
     assert response.status_code == 200
@@ -113,21 +126,44 @@ def test_create_automatic_weather_snapshot_api(
     assert data["event_id"] == event["id"]
     assert data["temperature"] == 24.5
     assert data["humidity"] == 70
-    assert data["weather_condition"] == "partly_cloudy"
-    assert data["recorded_at"] == "2026-08-28T09:30:00"
+    assert (
+        data["weather_condition"]
+        == "partly_cloudy"
+    )
+
+    assert (
+        data["recorded_at"]
+        == "2026-08-28T06:00:00"
+    )
+
     assert data["source"] == "open-meteo"
 
-    mock_get_weather_for_time.assert_called_once_with(
-        latitude=37.2073,
-        longitude=50.0039,
-        occurred_at=datetime(
-            2026,
-            8,
-            28,
-            9,
-            30,
-        ),
-        timezone_name="Asia/Tehran",
+    mock_get_weather_for_time.assert_called_once()
+
+    _, kwargs = (
+        mock_get_weather_for_time.call_args
+    )
+
+    assert kwargs["latitude"] == 37.2073
+    assert kwargs["longitude"] == 50.0039
+    assert (
+        kwargs["timezone_name"]
+        == "Asia/Tehran"
+    )
+
+    assert kwargs["occurred_at"].replace(
+        tzinfo=None,
+    ) == datetime(
+        2026,
+        8,
+        28,
+        9,
+        30,
+    )
+
+    assert (
+        kwargs["occurred_at"].tzinfo
+        is not None
     )
 
 
@@ -139,7 +175,9 @@ def test_automatic_weather_missing_event_api():
     assert response.status_code == 404
 
     assert response.json() == {
-        "detail": "Event with id 999 not found",
+        "detail": (
+            "Event with id 999 not found"
+        ),
     }
 
 
@@ -151,14 +189,16 @@ def test_automatic_weather_plant_without_place_api():
     )
 
     response = client.post(
-        f"/plant-events/{event['id']}/weather/auto",
+        f"/plant-events/"
+        f"{event['id']}/weather/auto",
     )
 
     assert response.status_code == 404
 
     assert response.json() == {
         "detail": (
-            f"Plant with id {plant['id']} has no place"
+            f"Plant with id {plant['id']} "
+            "has no place"
         ),
     }
 
@@ -178,7 +218,8 @@ def test_automatic_weather_place_without_coordinates_api():
     )
 
     response = client.post(
-        f"/plant-events/{event['id']}/weather/auto",
+        f"/plant-events/"
+        f"{event['id']}/weather/auto",
     )
 
     assert response.status_code == 404
@@ -207,28 +248,32 @@ def test_automatic_weather_duplicate_api(
         plant_id=plant["id"],
     )
 
-    mock_get_weather_for_time.return_value = WeatherData(
-        temperature=20.0,
-        humidity=80,
-        weather_condition="light_rain",
-        recorded_at=datetime(
-            2026,
-            8,
-            28,
-            9,
-            30,
-        ),
-        source="open-meteo",
+    mock_get_weather_for_time.return_value = (
+        WeatherData(
+            temperature=20.0,
+            humidity=80,
+            weather_condition="light_rain",
+            recorded_at=datetime(
+                2026,
+                8,
+                28,
+                6,
+                0,
+            ),
+            source="open-meteo",
+        )
     )
 
     first_response = client.post(
-        f"/plant-events/{event['id']}/weather/auto",
+        f"/plant-events/"
+        f"{event['id']}/weather/auto",
     )
 
     assert first_response.status_code == 200
 
     second_response = client.post(
-        f"/plant-events/{event['id']}/weather/auto",
+        f"/plant-events/"
+        f"{event['id']}/weather/auto",
     )
 
     assert second_response.status_code == 409

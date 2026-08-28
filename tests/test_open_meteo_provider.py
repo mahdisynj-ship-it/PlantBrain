@@ -57,8 +57,8 @@ def test_get_current_weather(
         2026,
         8,
         28,
-        9,
-        30,
+        6,
+        0,
     )
 
     assert weather.source == "open-meteo"
@@ -163,8 +163,8 @@ def test_get_historical_weather(
         2026,
         8,
         20,
-        9,
-        0,
+        5,
+        30,
     )
 
     assert weather.source == "open-meteo-historical"

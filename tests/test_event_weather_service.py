@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -65,8 +65,8 @@ def create_event(
             2026,
             8,
             28,
-            9,
-            30,
+            6,
+            0,
         )
 
     event = PlantEvent(
@@ -111,8 +111,8 @@ def test_create_weather_for_event(
             2026,
             8,
             28,
-            9,
-            30,
+            6,
+            0,
         ),
         source="open-meteo",
     )
@@ -126,14 +126,51 @@ def test_create_weather_for_event(
     assert snapshot.event_id == event.id
     assert snapshot.temperature == 23.5
     assert snapshot.humidity == 72
-    assert snapshot.weather_condition == "partly_cloudy"
+    assert (
+        snapshot.weather_condition
+        == "partly_cloudy"
+    )
     assert snapshot.source == "open-meteo"
 
-    mock_get_weather_for_time.assert_called_once_with(
-        latitude=37.2073,
-        longitude=50.0039,
-        occurred_at=event.occurred_at,
-        timezone_name="Asia/Tehran",
+    assert snapshot.recorded_at == datetime(
+        2026,
+        8,
+        28,
+        6,
+        0,
+    )
+
+    assert snapshot.recorded_at.tzinfo is None
+
+    mock_get_weather_for_time.assert_called_once()
+
+    _, kwargs = (
+        mock_get_weather_for_time.call_args
+    )
+
+    assert kwargs["latitude"] == 37.2073
+    assert kwargs["longitude"] == 50.0039
+    assert (
+        kwargs["timezone_name"]
+        == "Asia/Tehran"
+    )
+
+    assert kwargs["occurred_at"].replace(
+        tzinfo=None,
+    ) == datetime(
+        2026,
+        8,
+        28,
+        9,
+        30,
+    )
+
+    assert (
+        kwargs["occurred_at"].utcoffset()
+        == timedelta(
+            hours=3,
+            minutes=30,
+        )
     )
 
 
@@ -164,7 +201,10 @@ def test_create_weather_for_event_without_place(
 
     with pytest.raises(
         ValueError,
-        match=f"Plant with id {plant.id} has no place",
+        match=(
+            f"Plant with id {plant.id} "
+            "has no place"
+        ),
     ):
         create_weather_for_event(
             session=db_session,
@@ -193,7 +233,10 @@ def test_create_weather_for_event_without_coordinates(
 
     with pytest.raises(
         ValueError,
-        match=f"Place with id {place.id} has no coordinates",
+        match=(
+            f"Place with id {place.id} "
+            "has no coordinates"
+        ),
     ):
         create_weather_for_event(
             session=db_session,
@@ -227,8 +270,8 @@ def test_create_weather_for_event_with_existing_snapshot(
             2026,
             8,
             28,
-            9,
-            30,
+            6,
+            0,
         ),
         source="test",
     )

@@ -136,10 +136,20 @@ def test_watering_analysis_api_with_events(
 
     assert data["plant_id"] == plant["id"]
     assert data["total_events"] == 3
-    assert data["last_watered_at"] == "2026-08-11T09:00:00"
+
+    assert (
+        data["last_watered_at"]
+        == "2026-08-11T05:30:00"
+    )
+
     assert data["average_interval_days"] == 5.0
     assert data["days_since_last_watering"] == 10.0
-    assert data["expected_next_watering_at"] == "2026-08-16T09:00:00"
+
+    assert (
+        data["expected_next_watering_at"]
+        == "2026-08-16T05:30:00"
+    )
+
     assert data["watering_status"] == "overdue"
 
 

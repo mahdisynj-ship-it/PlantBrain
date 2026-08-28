@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 
-from app.database.models import Plant, PlantEvent
+from app.database.models import Place, Plant, PlantEvent
 from app.schemas.plant_event import CreatePlantEvent, UpdatePlantEvent
+from app.utils.datetime_utils import local_datetime_to_utc_naive
 
 
 def create_event(
@@ -9,15 +10,30 @@ def create_event(
     plant_id: int,
     data: CreatePlantEvent,
 ) -> PlantEvent:
-    plant = session.get(Plant, plant_id)
+    plant = session.get(
+        Plant,
+        plant_id,
+    )
 
     if plant is None:
-        raise ValueError(f"Plant with id {plant_id} not found")
+        raise ValueError(
+            f"Plant with id {plant_id} not found"
+        )
+
+    timezone_name = _get_plant_timezone_name(
+        session=session,
+        plant=plant,
+    )
+
+    occurred_at_utc = local_datetime_to_utc_naive(
+        value=data.occurred_at,
+        timezone_name=timezone_name,
+    )
 
     event = PlantEvent(
         plant_id=plant_id,
         event_type=data.event_type,
-        occurred_at=data.occurred_at,
+        occurred_at=occurred_at_utc,
         notes=data.notes,
         amount=data.amount,
         unit=data.unit,
@@ -37,8 +53,12 @@ def get_plant_events(
 ) -> list[PlantEvent]:
     return (
         session.query(PlantEvent)
-        .filter(PlantEvent.plant_id == plant_id)
-        .order_by(PlantEvent.id.desc())
+        .filter(
+            PlantEvent.plant_id == plant_id,
+        )
+        .order_by(
+            PlantEvent.id.desc(),
+        )
         .all()
     )
 
@@ -47,7 +67,10 @@ def get_event_by_id(
     session: Session,
     event_id: int,
 ) -> PlantEvent | None:
-    return session.get(PlantEvent, event_id)
+    return session.get(
+        PlantEvent,
+        event_id,
+    )
 
 
 def update_event(
@@ -55,7 +78,10 @@ def update_event(
     event_id: int,
     data: UpdatePlantEvent,
 ) -> PlantEvent | None:
-    event = session.get(PlantEvent, event_id)
+    event = session.get(
+        PlantEvent,
+        event_id,
+    )
 
     if event is None:
         return None
@@ -64,8 +90,35 @@ def update_event(
         exclude_unset=True,
     )
 
+    if "occurred_at" in update_data:
+        plant = session.get(
+            Plant,
+            event.plant_id,
+        )
+
+        if plant is None:
+            raise ValueError(
+                f"Plant with id {event.plant_id} not found"
+            )
+
+        timezone_name = _get_plant_timezone_name(
+            session=session,
+            plant=plant,
+        )
+
+        update_data["occurred_at"] = (
+            local_datetime_to_utc_naive(
+                value=update_data["occurred_at"],
+                timezone_name=timezone_name,
+            )
+        )
+
     for field, value in update_data.items():
-        setattr(event, field, value)
+        setattr(
+            event,
+            field,
+            value,
+        )
 
     session.commit()
     session.refresh(event)
@@ -77,7 +130,10 @@ def delete_event(
     session: Session,
     event_id: int,
 ) -> bool:
-    event = session.get(PlantEvent, event_id)
+    event = session.get(
+        PlantEvent,
+        event_id,
+    )
 
     if event is None:
         return False
@@ -86,3 +142,21 @@ def delete_event(
     session.commit()
 
     return True
+
+
+def _get_plant_timezone_name(
+    session: Session,
+    plant: Plant,
+) -> str:
+    if plant.place_id is None:
+        return "UTC"
+
+    place = session.get(
+        Place,
+        plant.place_id,
+    )
+
+    if place is None:
+        return "UTC"
+
+    return place.timezone

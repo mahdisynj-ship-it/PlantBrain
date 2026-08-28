@@ -109,8 +109,8 @@ def test_analyze_watering_with_one_event(
         2026,
         8,
         20,
-        9,
-        0,
+        5,
+        30,
     )
 
     plant = create_plant(
@@ -165,8 +165,8 @@ def test_analyze_watering_not_due(
             2026,
             8,
             1,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -178,8 +178,8 @@ def test_analyze_watering_not_due(
             2026,
             8,
             11,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -195,8 +195,8 @@ def test_analyze_watering_not_due(
         2026,
         8,
         21,
-        9,
-        0,
+        5,
+        30,
     )
 
     assert result.days_since_last_watering == 7.0
@@ -231,8 +231,8 @@ def test_analyze_watering_due(
             2026,
             8,
             1,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -244,8 +244,8 @@ def test_analyze_watering_due(
             2026,
             8,
             11,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -286,8 +286,8 @@ def test_analyze_watering_overdue(
             2026,
             8,
             1,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -299,8 +299,8 @@ def test_analyze_watering_overdue(
             2026,
             8,
             11,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -341,8 +341,8 @@ def test_analyze_watering_with_multiple_intervals(
             2026,
             8,
             1,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -354,8 +354,8 @@ def test_analyze_watering_with_multiple_intervals(
             2026,
             8,
             5,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -367,8 +367,8 @@ def test_analyze_watering_with_multiple_intervals(
             2026,
             8,
             11,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -384,16 +384,16 @@ def test_analyze_watering_with_multiple_intervals(
         2026,
         8,
         11,
-        9,
-        0,
+        5,
+        30,
     )
 
     assert result.expected_next_watering_at == datetime(
         2026,
         8,
         16,
-        9,
-        0,
+        5,
+        30,
     )
 
     assert result.days_since_last_watering == 4.0
@@ -415,8 +415,8 @@ def test_analyze_watering_ignores_other_event_types(
             2026,
             8,
             1,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -428,8 +428,8 @@ def test_analyze_watering_ignores_other_event_types(
             2026,
             8,
             3,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -441,8 +441,8 @@ def test_analyze_watering_ignores_other_event_types(
             2026,
             8,
             7,
-            9,
-            0,
+            5,
+            30,
         ),
     )
 
@@ -471,7 +471,7 @@ def test_analyze_watering_missing_plant(
 @patch(
     "app.services.care_analysis_service.datetime"
 )
-def test_watering_analysis_uses_place_timezone(
+def test_watering_analysis_uses_stored_utc_time(
     mock_datetime,
     db_session,
 ):
@@ -496,11 +496,19 @@ def test_watering_analysis_uses_place_timezone(
         timezone_name="America/Bogota",
     )
 
-    occurred_at = datetime(
+    tehran_occurred_at_utc = datetime(
         2026,
         8,
         20,
-        9,
+        5,
+        30,
+    )
+
+    bogota_occurred_at_utc = datetime(
+        2026,
+        8,
+        20,
+        14,
         0,
     )
 
@@ -508,14 +516,14 @@ def test_watering_analysis_uses_place_timezone(
         db_session,
         plant_id=tehran_plant.id,
         event_type="watering",
-        occurred_at=occurred_at,
+        occurred_at=tehran_occurred_at_utc,
     )
 
     create_event(
         db_session,
         plant_id=bogota_plant.id,
         event_type="watering",
-        occurred_at=occurred_at,
+        occurred_at=bogota_occurred_at_utc,
     )
 
     tehran_result = analyze_watering(

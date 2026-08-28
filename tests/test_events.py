@@ -227,3 +227,116 @@ def test_update_event_returns_none_for_missing_event(db_session):
     )
 
     assert result is None
+
+def test_create_event_converts_place_local_time_to_utc(
+    db_session,
+):
+    from app.database.models import Place
+
+    place = Place(
+        name="Tehran Home",
+        city="Tehran",
+        latitude=35.6892,
+        longitude=51.3890,
+        timezone="Asia/Tehran",
+    )
+
+    db_session.add(place)
+    db_session.commit()
+    db_session.refresh(place)
+
+    plant = create_plant(
+        session=db_session,
+        data=CreatePlant(
+            name="Timezone Test Plant",
+            place_id=place.id,
+        ),
+    )
+
+    event = create_event(
+        session=db_session,
+        plant_id=plant.id,
+        data=CreatePlantEvent(
+            event_type="watering",
+            occurred_at=datetime(
+                2026,
+                8,
+                18,
+                10,
+                0,
+            ),
+        ),
+    )
+
+    assert event.occurred_at == datetime(
+        2026,
+        8,
+        18,
+        6,
+        30,
+    )
+
+
+def test_update_event_converts_place_local_time_to_utc(
+    db_session,
+):
+    from app.database.models import Place
+
+    place = Place(
+        name="Tehran Home",
+        city="Tehran",
+        latitude=35.6892,
+        longitude=51.3890,
+        timezone="Asia/Tehran",
+    )
+
+    db_session.add(place)
+    db_session.commit()
+    db_session.refresh(place)
+
+    plant = create_plant(
+        session=db_session,
+        data=CreatePlant(
+            name="Timezone Test Plant",
+            place_id=place.id,
+        ),
+    )
+
+    event = create_event(
+        session=db_session,
+        plant_id=plant.id,
+        data=CreatePlantEvent(
+            event_type="watering",
+            occurred_at=datetime(
+                2026,
+                8,
+                18,
+                10,
+                0,
+            ),
+        ),
+    )
+
+    updated = update_event(
+        session=db_session,
+        event_id=event.id,
+        data=UpdatePlantEvent(
+            occurred_at=datetime(
+                2026,
+                8,
+                19,
+                10,
+                0,
+            ),
+        ),
+    )
+
+    assert updated is not None
+
+    assert updated.occurred_at == datetime(
+        2026,
+        8,
+        19,
+        6,
+        30,
+    )

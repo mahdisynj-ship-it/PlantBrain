@@ -9,6 +9,9 @@ from app.database.models import (
 from app.services.open_meteo_provider import (
     get_weather_for_time,
 )
+from app.utils.datetime_utils import (
+    utc_datetime_to_local,
+)
 
 
 def create_weather_for_event(
@@ -71,10 +74,15 @@ def create_weather_for_event(
             f"Place with id {place.id} has no coordinates"
         )
 
+    occurred_at_local = utc_datetime_to_local(
+        value=event.occurred_at,
+        timezone_name=place.timezone,
+    )
+
     weather_data = get_weather_for_time(
         latitude=place.latitude,
         longitude=place.longitude,
-        occurred_at=event.occurred_at,
+        occurred_at=occurred_at_local,
         timezone_name=place.timezone,
     )
 

@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
 
 import httpx
 
 from app.services.weather_provider import WeatherData
+from app.utils.datetime_utils import (
+    local_datetime_to_utc_naive,
+)
 
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
@@ -37,15 +39,26 @@ def get_current_weather(
     data = response.json()
     current = data["current"]
 
+    recorded_at_local = datetime.fromisoformat(
+        current["time"],
+    )
+
+    recorded_at_utc = local_datetime_to_utc_naive(
+        value=recorded_at_local,
+        timezone_name=timezone_name,
+    )
+
     return WeatherData(
         temperature=current.get("temperature_2m"),
-        humidity=current.get("relative_humidity_2m"),
-        weather_condition=_weather_code_to_condition(
-            current.get("weather_code"),
+        humidity=current.get(
+            "relative_humidity_2m"
         ),
-        recorded_at=datetime.fromisoformat(
-            current["time"],
+        weather_condition=(
+            _weather_code_to_condition(
+                current.get("weather_code"),
+            )
         ),
+        recorded_at=recorded_at_utc,
         source="open-meteo",
     )
 
@@ -56,7 +69,14 @@ def get_historical_weather(
     occurred_at: datetime,
     timezone_name: str,
 ) -> WeatherData:
-    date_string = occurred_at.date().isoformat()
+    occurred_at_local = _to_local_naive(
+        value=occurred_at,
+        timezone_name=timezone_name,
+    )
+
+    date_string = (
+        occurred_at_local.date().isoformat()
+    )
 
     params = {
         "latitude": latitude,
@@ -84,20 +104,37 @@ def get_historical_weather(
 
     target_index = _find_closest_hour_index(
         times=hourly["time"],
-        occurred_at=occurred_at,
+        occurred_at=occurred_at_local,
     )
 
-    recorded_at = datetime.fromisoformat(
+    recorded_at_local = datetime.fromisoformat(
         hourly["time"][target_index],
     )
 
+    recorded_at_utc = local_datetime_to_utc_naive(
+        value=recorded_at_local,
+        timezone_name=timezone_name,
+    )
+
     return WeatherData(
-        temperature=hourly["temperature_2m"][target_index],
-        humidity=hourly["relative_humidity_2m"][target_index],
-        weather_condition=_weather_code_to_condition(
-            hourly["weather_code"][target_index],
+        temperature=(
+            hourly["temperature_2m"][
+                target_index
+            ]
         ),
-        recorded_at=recorded_at,
+        humidity=(
+            hourly[
+                "relative_humidity_2m"
+            ][target_index]
+        ),
+        weather_condition=(
+            _weather_code_to_condition(
+                hourly["weather_code"][
+                    target_index
+                ],
+            )
+        ),
+        recorded_at=recorded_at_utc,
         source="open-meteo-historical",
     )
 
@@ -138,17 +175,39 @@ def _to_utc(
     value: datetime,
     timezone_name: str,
 ) -> datetime:
-    if value.tzinfo is None:
-        local_timezone = ZoneInfo(
-            timezone_name,
-        )
+    utc_naive = local_datetime_to_utc_naive(
+        value=value,
+        timezone_name=timezone_name,
+    )
 
-        value = value.replace(
-            tzinfo=local_timezone,
-        )
+    return utc_naive.replace(
+        tzinfo=timezone.utc,
+    )
+
+
+def _to_local_naive(
+    value: datetime,
+    timezone_name: str,
+) -> datetime:
+    if value.tzinfo is None:
+        return value
 
     return value.astimezone(
-        timezone.utc,
+        _get_timezone(
+            timezone_name,
+        )
+    ).replace(
+        tzinfo=None,
+    )
+
+
+def _get_timezone(
+    timezone_name: str,
+):
+    from zoneinfo import ZoneInfo
+
+    return ZoneInfo(
+        timezone_name,
     )
 
 
@@ -158,7 +217,8 @@ def _find_closest_hour_index(
 ) -> int:
     if not times:
         raise ValueError(
-            "Historical weather response contains no hourly data"
+            "Historical weather response "
+            "contains no hourly data"
         )
 
     target = occurred_at.replace(
@@ -214,8 +274,12 @@ def _weather_code_to_condition(
         85: "light_snow_showers",
         86: "heavy_snow_showers",
         95: "thunderstorm",
-        96: "thunderstorm_with_light_hail",
-        99: "thunderstorm_with_heavy_hail",
+        96: (
+            "thunderstorm_with_light_hail"
+        ),
+        99: (
+            "thunderstorm_with_heavy_hail"
+        ),
     }
 
     return conditions.get(

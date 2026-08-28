@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.orm import Session
 
-from app.database.models import Place, Plant, PlantEvent
+from app.database.models import Plant, PlantEvent
+from app.utils.datetime_utils import utc_naive_to_aware
 
 
 @dataclass
@@ -32,18 +32,15 @@ def analyze_watering(
             f"Plant with id {plant_id} not found"
         )
 
-    place_timezone = _get_plant_timezone(
-        session=session,
-        plant=plant,
-    )
-
     watering_events = (
         session.query(PlantEvent)
         .filter(
             PlantEvent.plant_id == plant_id,
             PlantEvent.event_type == "watering",
         )
-        .order_by(PlantEvent.occurred_at.asc())
+        .order_by(
+            PlantEvent.occurred_at.asc(),
+        )
         .all()
     )
 
@@ -62,15 +59,16 @@ def analyze_watering(
             watering_status="unknown",
         )
 
-    last_watered_at = watering_events[-1].occurred_at
+    last_watered_at = (
+        watering_events[-1].occurred_at
+    )
 
     now = datetime.now(
         timezone.utc,
     )
 
-    last_watered_at_utc = _ensure_utc(
-        value=last_watered_at,
-        local_timezone=place_timezone,
+    last_watered_at_utc = utc_naive_to_aware(
+        last_watered_at,
     )
 
     days_since_last_watering = (
@@ -88,7 +86,9 @@ def analyze_watering(
             total_events=1,
             last_watered_at=last_watered_at,
             average_interval_days=None,
-            days_since_last_watering=days_since_last_watering,
+            days_since_last_watering=(
+                days_since_last_watering
+            ),
             expected_next_watering_at=None,
             watering_status="unknown",
         )
@@ -121,62 +121,38 @@ def analyze_watering(
         )
     )
 
-    expected_next_watering_at_utc = _ensure_utc(
-        value=expected_next_watering_at,
-        local_timezone=place_timezone,
+    expected_next_watering_at_utc = (
+        utc_naive_to_aware(
+            expected_next_watering_at,
+        )
     )
 
-    watering_status = _calculate_watering_status(
-        now=now,
-        expected_next_watering_at=expected_next_watering_at_utc,
-        average_interval_days=average_interval_days,
+    watering_status = (
+        _calculate_watering_status(
+            now=now,
+            expected_next_watering_at=(
+                expected_next_watering_at_utc
+            ),
+            average_interval_days=(
+                average_interval_days
+            ),
+        )
     )
 
     return WateringAnalysis(
         plant_id=plant_id,
         total_events=total_events,
         last_watered_at=last_watered_at,
-        average_interval_days=average_interval_days,
-        days_since_last_watering=days_since_last_watering,
-        expected_next_watering_at=expected_next_watering_at,
+        average_interval_days=(
+            average_interval_days
+        ),
+        days_since_last_watering=(
+            days_since_last_watering
+        ),
+        expected_next_watering_at=(
+            expected_next_watering_at
+        ),
         watering_status=watering_status,
-    )
-
-
-def _get_plant_timezone(
-    session: Session,
-    plant: Plant,
-) -> ZoneInfo:
-    if plant.place_id is None:
-        return ZoneInfo("UTC")
-
-    place = session.get(
-        Place,
-        plant.place_id,
-    )
-
-    if place is None:
-        return ZoneInfo("UTC")
-
-    try:
-        return ZoneInfo(
-            place.timezone,
-        )
-    except ZoneInfoNotFoundError:
-        return ZoneInfo("UTC")
-
-
-def _ensure_utc(
-    value: datetime,
-    local_timezone: ZoneInfo,
-) -> datetime:
-    if value.tzinfo is None:
-        value = value.replace(
-            tzinfo=local_timezone,
-        )
-
-    return value.astimezone(
-        timezone.utc,
     )
 
 
@@ -192,10 +168,18 @@ def _calculate_watering_status(
         ),
     )
 
-    if now < expected_next_watering_at - due_window:
+    if (
+        now
+        < expected_next_watering_at
+        - due_window
+    ):
         return "not_due"
 
-    if now <= expected_next_watering_at + due_window:
+    if (
+        now
+        <= expected_next_watering_at
+        + due_window
+    ):
         return "due"
 
     return "overdue"
