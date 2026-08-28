@@ -21,6 +21,7 @@ from app.services.event_service import (
     get_plant_events,
     update_event,
 )
+from app.services.event_weather_service import create_weather_for_event
 from app.services.place_service import (
     create_place,
     delete_place,
@@ -316,6 +317,34 @@ def create_weather_snapshot_endpoint(
 
         raise HTTPException(
             status_code=409,
+            detail=message,
+        )
+
+
+@app.post(
+    "/plant-events/{event_id}/weather/auto",
+    response_model=WeatherSnapshotResponse,
+)
+def create_automatic_weather_snapshot_endpoint(
+    event_id: int,
+    session: Session = Depends(get_session),
+):
+    try:
+        return create_weather_for_event(
+            session=session,
+            event_id=event_id,
+        )
+    except ValueError as error:
+        message = str(error)
+
+        if "already exists" in message:
+            raise HTTPException(
+                status_code=409,
+                detail=message,
+            )
+
+        raise HTTPException(
+            status_code=404,
             detail=message,
         )
 
