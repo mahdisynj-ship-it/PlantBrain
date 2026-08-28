@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
+from app.schemas.care_analysis import WateringAnalysisResponse
 from app.schemas.place import CreatePlace, PlaceResponse, UpdatePlace
 from app.schemas.plant import CreatePlant, PlantResponse, UpdatePlant
 from app.schemas.plant_event import (
@@ -14,6 +15,7 @@ from app.schemas.weather_snapshot import (
     UpdateWeatherSnapshot,
     WeatherSnapshotResponse,
 )
+from app.services.care_analysis_service import analyze_watering
 from app.services.event_service import (
     create_event,
     delete_event,
@@ -153,6 +155,26 @@ def update_plant_endpoint(
         )
 
     return plant
+
+
+@app.get(
+    "/plants/{plant_id}/analysis/watering",
+    response_model=WateringAnalysisResponse,
+)
+def get_watering_analysis_endpoint(
+    plant_id: int,
+    session: Session = Depends(get_session),
+):
+    try:
+        return analyze_watering(
+            session=session,
+            plant_id=plant_id,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        )
 
 
 @app.delete("/plants/{plant_id}")
