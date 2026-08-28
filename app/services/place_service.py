@@ -13,6 +13,7 @@ def create_place(
         city=data.city,
         latitude=data.latitude,
         longitude=data.longitude,
+        timezone=data.timezone,
     )
 
     session.add(place)
@@ -36,7 +37,10 @@ def get_place_by_id(
     session: Session,
     place_id: int,
 ) -> Place | None:
-    return session.get(Place, place_id)
+    return session.get(
+        Place,
+        place_id,
+    )
 
 
 def update_place(
@@ -44,7 +48,10 @@ def update_place(
     place_id: int,
     data: UpdatePlace,
 ) -> Place | None:
-    place = session.get(Place, place_id)
+    place = session.get(
+        Place,
+        place_id,
+    )
 
     if place is None:
         return None
@@ -54,7 +61,11 @@ def update_place(
     )
 
     for field, value in update_data.items():
-        setattr(place, field, value)
+        setattr(
+            place,
+            field,
+            value,
+        )
 
     session.commit()
     session.refresh(place)
@@ -66,7 +77,10 @@ def delete_place(
     session: Session,
     place_id: int,
 ) -> bool:
-    place = session.get(Place, place_id)
+    place = session.get(
+        Place,
+        place_id,
+    )
 
     if place is None:
         return False

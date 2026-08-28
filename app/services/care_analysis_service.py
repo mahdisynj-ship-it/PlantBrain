@@ -4,10 +4,7 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
 
-from app.database.models import Plant, PlantEvent
-
-
-LOCAL_TIMEZONE = ZoneInfo("Asia/Tehran")
+from app.database.models import Place, Plant, PlantEvent
 
 
 @dataclass
@@ -34,6 +31,11 @@ def analyze_watering(
         raise ValueError(
             f"Plant with id {plant_id} not found"
         )
+
+    place_timezone = _get_plant_timezone(
+        session=session,
+        plant=plant,
+    )
 
     watering_events = (
         session.query(PlantEvent)
@@ -67,7 +69,8 @@ def analyze_watering(
     )
 
     last_watered_at_utc = _ensure_utc(
-        last_watered_at,
+        value=last_watered_at,
+        local_timezone=place_timezone,
     )
 
     days_since_last_watering = (
@@ -119,7 +122,8 @@ def analyze_watering(
     )
 
     expected_next_watering_at_utc = _ensure_utc(
-        expected_next_watering_at,
+        value=expected_next_watering_at,
+        local_timezone=place_timezone,
     )
 
     watering_status = _calculate_watering_status(
@@ -139,12 +143,36 @@ def analyze_watering(
     )
 
 
+def _get_plant_timezone(
+    session: Session,
+    plant: Plant,
+) -> ZoneInfo:
+    if plant.place_id is None:
+        return ZoneInfo("UTC")
+
+    place = session.get(
+        Place,
+        plant.place_id,
+    )
+
+    if place is None:
+        return ZoneInfo("UTC")
+
+    try:
+        return ZoneInfo(
+            place.timezone,
+        )
+    except Exception:
+        return ZoneInfo("UTC")
+
+
 def _ensure_utc(
     value: datetime,
+    local_timezone: ZoneInfo,
 ) -> datetime:
     if value.tzinfo is None:
         value = value.replace(
-            tzinfo=LOCAL_TIMEZONE,
+            tzinfo=local_timezone,
         )
 
     return value.astimezone(

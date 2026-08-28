@@ -35,6 +35,12 @@ class Place(Base):
         nullable=True,
     )
 
+    timezone: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+        default="Asia/Tehran",
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,

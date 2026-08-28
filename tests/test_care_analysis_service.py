@@ -3,17 +3,43 @@ from unittest.mock import patch
 
 import pytest
 
-from app.database.models import Plant, PlantEvent
+from app.database.models import Place, Plant, PlantEvent
 from app.services.care_analysis_service import analyze_watering
+
+
+def create_place(
+    db_session,
+    timezone_name="Asia/Tehran",
+):
+    place = Place(
+        name="Test Place",
+        city="Test City",
+        latitude=37.2073,
+        longitude=50.0039,
+        timezone=timezone_name,
+    )
+
+    db_session.add(place)
+    db_session.commit()
+    db_session.refresh(place)
+
+    return place
 
 
 def create_plant(
     db_session,
     name="فیکوس",
+    timezone_name="Asia/Tehran",
 ):
+    place = create_place(
+        db_session,
+        timezone_name=timezone_name,
+    )
+
     plant = Plant(
         name=name,
         status="active",
+        place_id=place.id,
     )
 
     db_session.add(plant)
@@ -440,3 +466,70 @@ def test_analyze_watering_missing_plant(
             session=db_session,
             plant_id=999,
         )
+
+
+@patch(
+    "app.services.care_analysis_service.datetime"
+)
+def test_watering_analysis_uses_place_timezone(
+    mock_datetime,
+    db_session,
+):
+    mock_datetime.now.return_value = datetime(
+        2026,
+        8,
+        20,
+        12,
+        30,
+        tzinfo=timezone.utc,
+    )
+
+    tehran_plant = create_plant(
+        db_session,
+        name="Tehran Plant",
+        timezone_name="Asia/Tehran",
+    )
+
+    bogota_plant = create_plant(
+        db_session,
+        name="Bogota Plant",
+        timezone_name="America/Bogota",
+    )
+
+    occurred_at = datetime(
+        2026,
+        8,
+        20,
+        9,
+        0,
+    )
+
+    create_event(
+        db_session,
+        plant_id=tehran_plant.id,
+        event_type="watering",
+        occurred_at=occurred_at,
+    )
+
+    create_event(
+        db_session,
+        plant_id=bogota_plant.id,
+        event_type="watering",
+        occurred_at=occurred_at,
+    )
+
+    tehran_result = analyze_watering(
+        session=db_session,
+        plant_id=tehran_plant.id,
+    )
+
+    bogota_result = analyze_watering(
+        session=db_session,
+        plant_id=bogota_plant.id,
+    )
+
+    assert tehran_result.days_since_last_watering == (
+        7.0 / 24.0
+    )
+
+    assert bogota_result.days_since_last_watering == 0.0

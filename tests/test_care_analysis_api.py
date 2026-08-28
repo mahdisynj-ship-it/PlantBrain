@@ -14,11 +14,31 @@ def teardown_function():
     Base.metadata.drop_all(bind=engine)
 
 
+def create_place():
+    response = client.post(
+        "/places",
+        json={
+            "name": "Test Place",
+            "city": "Lahijan",
+            "latitude": 37.2073,
+            "longitude": 50.0039,
+            "timezone": "Asia/Tehran",
+        },
+    )
+
+    assert response.status_code == 200
+
+    return response.json()
+
+
 def create_plant():
+    place = create_place()
+
     response = client.post(
         "/plants",
         json={
             "name": "فیکوس",
+            "place_id": place["id"],
         },
     )
 
