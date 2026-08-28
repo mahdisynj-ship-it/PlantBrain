@@ -3,22 +3,32 @@ from unittest.mock import patch
 
 import pytest
 
-from app.database.models import Place, Plant, PlantEvent
-from app.services.event_weather_service import create_weather_for_event
+from app.database.models import (
+    Place,
+    Plant,
+    PlantEvent,
+    WeatherSnapshot,
+)
+from app.services.event_weather_service import (
+    create_weather_for_event,
+)
 from app.services.weather_provider import WeatherData
 
 
 def create_place(
     db_session,
-    name="خانه",
+    name="Home",
+    city="Lahijan",
     latitude=37.2073,
     longitude=50.0039,
+    timezone_name="Asia/Tehran",
 ):
     place = Place(
         name=name,
-        city="لاهیجان",
+        city=city,
         latitude=latitude,
         longitude=longitude,
+        timezone=timezone_name,
     )
 
     db_session.add(place)
@@ -31,11 +41,11 @@ def create_place(
 def create_plant(
     db_session,
     place_id=None,
+    name="فیکوس",
 ):
     plant = Plant(
-        name="فیکوس",
+        name=name,
         place_id=place_id,
-        status="active",
     )
 
     db_session.add(plant)
@@ -48,17 +58,21 @@ def create_plant(
 def create_event(
     db_session,
     plant_id,
+    occurred_at=None,
 ):
-    event = PlantEvent(
-        plant_id=plant_id,
-        event_type="watering",
-        occurred_at=datetime(
+    if occurred_at is None:
+        occurred_at = datetime(
             2026,
             8,
             28,
             9,
             30,
-        ),
+        )
+
+    event = PlantEvent(
+        plant_id=plant_id,
+        event_type="watering",
+        occurred_at=occurred_at,
     )
 
     db_session.add(event)
@@ -119,6 +133,7 @@ def test_create_weather_for_event(
         latitude=37.2073,
         longitude=50.0039,
         occurred_at=event.occurred_at,
+        timezone_name="Asia/Tehran",
     )
 
 
@@ -135,12 +150,11 @@ def test_create_weather_for_missing_event(
         )
 
 
-def test_create_weather_for_plant_without_place(
+def test_create_weather_for_event_without_place(
     db_session,
 ):
     plant = create_plant(
         db_session,
-        place_id=None,
     )
 
     event = create_event(
@@ -158,7 +172,7 @@ def test_create_weather_for_plant_without_place(
         )
 
 
-def test_create_weather_for_place_without_coordinates(
+def test_create_weather_for_event_without_coordinates(
     db_session,
 ):
     place = create_place(
@@ -187,11 +201,7 @@ def test_create_weather_for_place_without_coordinates(
         )
 
 
-@patch(
-    "app.services.event_weather_service.get_weather_for_time"
-)
-def test_create_weather_for_event_rejects_duplicate_snapshot(
-    mock_get_weather_for_time,
+def test_create_weather_for_event_with_existing_snapshot(
     db_session,
 ):
     place = create_place(
@@ -208,10 +218,11 @@ def test_create_weather_for_event_rejects_duplicate_snapshot(
         plant_id=plant.id,
     )
 
-    mock_get_weather_for_time.return_value = WeatherData(
-        temperature=21.0,
-        humidity=80,
-        weather_condition="light_rain",
+    snapshot = WeatherSnapshot(
+        event_id=event.id,
+        temperature=20.0,
+        humidity=60,
+        weather_condition="clear",
         recorded_at=datetime(
             2026,
             8,
@@ -219,13 +230,11 @@ def test_create_weather_for_event_rejects_duplicate_snapshot(
             9,
             30,
         ),
-        source="open-meteo",
+        source="test",
     )
 
-    create_weather_for_event(
-        session=db_session,
-        event_id=event.id,
-    )
+    db_session.add(snapshot)
+    db_session.commit()
 
     with pytest.raises(
         ValueError,
@@ -238,5 +247,3 @@ def test_create_weather_for_event_rejects_duplicate_snapshot(
             session=db_session,
             event_id=event.id,
         )
-
-    mock_get_weather_for_time.assert_called_once()

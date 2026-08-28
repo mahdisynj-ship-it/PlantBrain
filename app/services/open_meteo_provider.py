@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -12,6 +13,7 @@ OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 def get_current_weather(
     latitude: float,
     longitude: float,
+    timezone_name: str,
 ) -> WeatherData:
     params = {
         "latitude": latitude,
@@ -21,7 +23,7 @@ def get_current_weather(
             "relative_humidity_2m,"
             "weather_code"
         ),
-        "timezone": "auto",
+        "timezone": timezone_name,
     }
 
     response = httpx.get(
@@ -52,6 +54,7 @@ def get_historical_weather(
     latitude: float,
     longitude: float,
     occurred_at: datetime,
+    timezone_name: str,
 ) -> WeatherData:
     date_string = occurred_at.date().isoformat()
 
@@ -65,7 +68,7 @@ def get_historical_weather(
             "relative_humidity_2m,"
             "weather_code"
         ),
-        "timezone": "auto",
+        "timezone": timezone_name,
     }
 
     response = httpx.get(
@@ -103,32 +106,45 @@ def get_weather_for_time(
     latitude: float,
     longitude: float,
     occurred_at: datetime,
+    timezone_name: str,
 ) -> WeatherData:
-    now = datetime.now(timezone.utc)
-
-    occurred_at_utc = _ensure_utc(
-        occurred_at,
+    now = datetime.now(
+        timezone.utc,
     )
 
-    if abs(now - occurred_at_utc) <= timedelta(hours=3):
+    occurred_at_utc = _to_utc(
+        value=occurred_at,
+        timezone_name=timezone_name,
+    )
+
+    if abs(
+        now - occurred_at_utc
+    ) <= timedelta(hours=3):
         return get_current_weather(
             latitude=latitude,
             longitude=longitude,
+            timezone_name=timezone_name,
         )
 
     return get_historical_weather(
         latitude=latitude,
         longitude=longitude,
         occurred_at=occurred_at,
+        timezone_name=timezone_name,
     )
 
 
-def _ensure_utc(
+def _to_utc(
     value: datetime,
+    timezone_name: str,
 ) -> datetime:
     if value.tzinfo is None:
-        return value.replace(
-            tzinfo=timezone.utc,
+        local_timezone = ZoneInfo(
+            timezone_name,
+        )
+
+        value = value.replace(
+            tzinfo=local_timezone,
         )
 
     return value.astimezone(

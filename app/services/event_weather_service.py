@@ -1,7 +1,14 @@
 from sqlalchemy.orm import Session
 
-from app.database.models import Place, Plant, PlantEvent, WeatherSnapshot
-from app.services.open_meteo_provider import get_weather_for_time
+from app.database.models import (
+    Place,
+    Plant,
+    PlantEvent,
+    WeatherSnapshot,
+)
+from app.services.open_meteo_provider import (
+    get_weather_for_time,
+)
 
 
 def create_weather_for_event(
@@ -68,6 +75,7 @@ def create_weather_for_event(
         latitude=place.latitude,
         longitude=place.longitude,
         occurred_at=event.occurred_at,
+        timezone_name=place.timezone,
     )
 
     snapshot = WeatherSnapshot(

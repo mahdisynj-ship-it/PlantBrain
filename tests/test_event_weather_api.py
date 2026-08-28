@@ -16,7 +16,7 @@ def teardown_function():
 
 
 def create_place(
-    name="خانه",
+    name="Home",
     latitude=37.2073,
     longitude=50.0039,
 ):
@@ -24,9 +24,10 @@ def create_place(
         "/places",
         json={
             "name": name,
-            "city": "لاهیجان",
+            "city": "Lahijan",
             "latitude": latitude,
             "longitude": longitude,
+            "timezone": "Asia/Tehran",
         },
     )
 
@@ -78,9 +79,11 @@ def test_create_automatic_weather_snapshot_api(
     mock_get_weather_for_time,
 ):
     place = create_place()
+
     plant = create_plant(
         place_id=place["id"],
     )
+
     event = create_event(
         plant_id=plant["id"],
     )
@@ -111,6 +114,7 @@ def test_create_automatic_weather_snapshot_api(
     assert data["temperature"] == 24.5
     assert data["humidity"] == 70
     assert data["weather_condition"] == "partly_cloudy"
+    assert data["recorded_at"] == "2026-08-28T09:30:00"
     assert data["source"] == "open-meteo"
 
     mock_get_weather_for_time.assert_called_once_with(
@@ -123,6 +127,7 @@ def test_create_automatic_weather_snapshot_api(
             9,
             30,
         ),
+        timezone_name="Asia/Tehran",
     )
 
 
@@ -152,7 +157,9 @@ def test_automatic_weather_plant_without_place_api():
     assert response.status_code == 404
 
     assert response.json() == {
-        "detail": f"Plant with id {plant['id']} has no place",
+        "detail": (
+            f"Plant with id {plant['id']} has no place"
+        ),
     }
 
 
