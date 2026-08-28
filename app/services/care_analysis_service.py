@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.orm import Session
 
@@ -162,7 +162,7 @@ def _get_plant_timezone(
         return ZoneInfo(
             place.timezone,
         )
-    except Exception:
+    except ZoneInfoNotFoundError:
         return ZoneInfo("UTC")
 
 
