@@ -3,8 +3,17 @@ from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
 from app.schemas.care_analysis import WateringAnalysisResponse
-from app.schemas.place import CreatePlace, PlaceResponse, UpdatePlace
-from app.schemas.plant import CreatePlant, PlantResponse, UpdatePlant
+from app.schemas.care_history import CareHistoryResponse
+from app.schemas.place import (
+    CreatePlace,
+    PlaceResponse,
+    UpdatePlace,
+)
+from app.schemas.plant import (
+    CreatePlant,
+    PlantResponse,
+    UpdatePlant,
+)
 from app.schemas.plant_event import (
     CreatePlantEvent,
     PlantEventResponse,
@@ -15,7 +24,12 @@ from app.schemas.weather_snapshot import (
     UpdateWeatherSnapshot,
     WeatherSnapshotResponse,
 )
-from app.services.care_analysis_service import analyze_watering
+from app.services.care_analysis_service import (
+    analyze_watering,
+)
+from app.services.care_history_service import (
+    get_care_history,
+)
 from app.services.event_service import (
     create_event,
     delete_event,
@@ -23,7 +37,9 @@ from app.services.event_service import (
     get_plant_events,
     update_event,
 )
-from app.services.event_weather_service import create_weather_for_event
+from app.services.event_weather_service import (
+    create_weather_for_event,
+)
 from app.services.place_service import (
     create_place,
     delete_place,
@@ -121,7 +137,9 @@ def get_plant_endpoint(
     if plant is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Plant with id {plant_id} not found",
+            detail=(
+                f"Plant with id {plant_id} not found"
+            ),
         )
 
     return plant
@@ -151,7 +169,9 @@ def update_plant_endpoint(
     if plant is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Plant with id {plant_id} not found",
+            detail=(
+                f"Plant with id {plant_id} not found"
+            ),
         )
 
     return plant
@@ -177,6 +197,36 @@ def get_watering_analysis_endpoint(
         )
 
 
+@app.get(
+    "/plants/{plant_id}/care-history",
+    response_model=CareHistoryResponse,
+)
+def get_care_history_endpoint(
+    plant_id: int,
+    period_days: int = 30,
+    session: Session = Depends(get_session),
+):
+    try:
+        return get_care_history(
+            session=session,
+            plant_id=plant_id,
+            period_days=period_days,
+        )
+    except ValueError as error:
+        message = str(error)
+
+        if "not found" in message:
+            raise HTTPException(
+                status_code=404,
+                detail=message,
+            )
+
+        raise HTTPException(
+            status_code=422,
+            detail=message,
+        )
+
+
 @app.delete("/plants/{plant_id}")
 def delete_plant_endpoint(
     plant_id: int,
@@ -190,7 +240,9 @@ def delete_plant_endpoint(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail=f"Plant with id {plant_id} not found",
+            detail=(
+                f"Plant with id {plant_id} not found"
+            ),
         )
 
     return {
@@ -256,7 +308,9 @@ def get_event_endpoint(
     if event is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Event with id {event_id} not found",
+            detail=(
+                f"Event with id {event_id} not found"
+            ),
         )
 
     return event
@@ -280,7 +334,9 @@ def update_event_endpoint(
     if event is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Event with id {event_id} not found",
+            detail=(
+                f"Event with id {event_id} not found"
+            ),
         )
 
     return event
@@ -299,7 +355,9 @@ def delete_event_endpoint(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail=f"Event with id {event_id} not found",
+            detail=(
+                f"Event with id {event_id} not found"
+            ),
         )
 
     return {
@@ -379,15 +437,20 @@ def get_weather_snapshot_endpoint(
     event_id: int,
     session: Session = Depends(get_session),
 ):
-    snapshot = get_weather_snapshot_by_event_id(
-        session=session,
-        event_id=event_id,
+    snapshot = (
+        get_weather_snapshot_by_event_id(
+            session=session,
+            event_id=event_id,
+        )
     )
 
     if snapshot is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Weather snapshot for event id {event_id} not found",
+            detail=(
+                "Weather snapshot for event id "
+                f"{event_id} not found"
+            ),
         )
 
     return snapshot
@@ -411,13 +474,18 @@ def update_weather_snapshot_endpoint(
     if snapshot is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Weather snapshot for event id {event_id} not found",
+            detail=(
+                "Weather snapshot for event id "
+                f"{event_id} not found"
+            ),
         )
 
     return snapshot
 
 
-@app.delete("/plant-events/{event_id}/weather")
+@app.delete(
+    "/plant-events/{event_id}/weather"
+)
 def delete_weather_snapshot_endpoint(
     event_id: int,
     session: Session = Depends(get_session),
@@ -430,11 +498,16 @@ def delete_weather_snapshot_endpoint(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail=f"Weather snapshot for event id {event_id} not found",
+            detail=(
+                "Weather snapshot for event id "
+                f"{event_id} not found"
+            ),
         )
 
     return {
-        "message": "Weather snapshot deleted successfully",
+        "message": (
+            "Weather snapshot deleted successfully"
+        ),
         "event_id": event_id,
     }
 
@@ -486,7 +559,9 @@ def get_place_endpoint(
     if place is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Place with id {place_id} not found",
+            detail=(
+                f"Place with id {place_id} not found"
+            ),
         )
 
     return place
@@ -510,7 +585,9 @@ def update_place_endpoint(
     if place is None:
         raise HTTPException(
             status_code=404,
-            detail=f"Place with id {place_id} not found",
+            detail=(
+                f"Place with id {place_id} not found"
+            ),
         )
 
     return place
@@ -529,7 +606,9 @@ def delete_place_endpoint(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail=f"Place with id {place_id} not found",
+            detail=(
+                f"Place with id {place_id} not found"
+            ),
         )
 
     return {
