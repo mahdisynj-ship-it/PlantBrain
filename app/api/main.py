@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.session import SessionLocal
 from app.schemas.care_analysis import WateringAnalysisResponse
 from app.schemas.care_history import CareHistoryResponse
+from app.schemas.care_pattern import CarePatternResponse
 from app.schemas.place import (
     CreatePlace,
     PlaceResponse,
@@ -29,6 +30,9 @@ from app.services.care_analysis_service import (
 )
 from app.services.care_history_service import (
     get_care_history,
+)
+from app.services.care_pattern_service import (
+    get_care_pattern,
 )
 from app.services.event_service import (
     create_event,
@@ -208,6 +212,36 @@ def get_care_history_endpoint(
 ):
     try:
         return get_care_history(
+            session=session,
+            plant_id=plant_id,
+            period_days=period_days,
+        )
+    except ValueError as error:
+        message = str(error)
+
+        if "not found" in message:
+            raise HTTPException(
+                status_code=404,
+                detail=message,
+            )
+
+        raise HTTPException(
+            status_code=422,
+            detail=message,
+        )
+
+
+@app.get(
+    "/plants/{plant_id}/care-pattern",
+    response_model=CarePatternResponse,
+)
+def get_care_pattern_endpoint(
+    plant_id: int,
+    period_days: int = 90,
+    session: Session = Depends(get_session),
+):
+    try:
+        return get_care_pattern(
             session=session,
             plant_id=plant_id,
             period_days=period_days,
