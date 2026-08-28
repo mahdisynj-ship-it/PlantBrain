@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from app.database.models import Place, Plant, PlantEvent, WeatherSnapshot
-from app.services.open_meteo_provider import get_current_weather
+from app.services.open_meteo_provider import get_weather_for_time
 
 
 def create_weather_for_event(
@@ -64,9 +64,10 @@ def create_weather_for_event(
             f"Place with id {place.id} has no coordinates"
         )
 
-    weather_data = get_current_weather(
+    weather_data = get_weather_for_time(
         latitude=place.latitude,
         longitude=place.longitude,
+        occurred_at=event.occurred_at,
     )
 
     snapshot = WeatherSnapshot(

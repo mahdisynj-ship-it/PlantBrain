@@ -72,10 +72,10 @@ def create_event(
 
 
 @patch(
-    "app.services.event_weather_service.get_current_weather"
+    "app.services.event_weather_service.get_weather_for_time"
 )
 def test_create_automatic_weather_snapshot_api(
-    mock_get_current_weather,
+    mock_get_weather_for_time,
 ):
     place = create_place()
     plant = create_plant(
@@ -85,7 +85,7 @@ def test_create_automatic_weather_snapshot_api(
         plant_id=plant["id"],
     )
 
-    mock_get_current_weather.return_value = WeatherData(
+    mock_get_weather_for_time.return_value = WeatherData(
         temperature=24.5,
         humidity=70,
         weather_condition="partly_cloudy",
@@ -113,9 +113,16 @@ def test_create_automatic_weather_snapshot_api(
     assert data["weather_condition"] == "partly_cloudy"
     assert data["source"] == "open-meteo"
 
-    mock_get_current_weather.assert_called_once_with(
+    mock_get_weather_for_time.assert_called_once_with(
         latitude=37.2073,
         longitude=50.0039,
+        occurred_at=datetime(
+            2026,
+            8,
+            28,
+            9,
+            30,
+        ),
     )
 
 
@@ -178,10 +185,10 @@ def test_automatic_weather_place_without_coordinates_api():
 
 
 @patch(
-    "app.services.event_weather_service.get_current_weather"
+    "app.services.event_weather_service.get_weather_for_time"
 )
 def test_automatic_weather_duplicate_api(
-    mock_get_current_weather,
+    mock_get_weather_for_time,
 ):
     place = create_place()
 
@@ -193,7 +200,7 @@ def test_automatic_weather_duplicate_api(
         plant_id=plant["id"],
     )
 
-    mock_get_current_weather.return_value = WeatherData(
+    mock_get_weather_for_time.return_value = WeatherData(
         temperature=20.0,
         humidity=80,
         weather_condition="light_rain",
@@ -226,4 +233,4 @@ def test_automatic_weather_duplicate_api(
         ),
     }
 
-    mock_get_current_weather.assert_called_once()
+    mock_get_weather_for_time.assert_called_once()

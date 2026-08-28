@@ -69,10 +69,10 @@ def create_event(
 
 
 @patch(
-    "app.services.event_weather_service.get_current_weather"
+    "app.services.event_weather_service.get_weather_for_time"
 )
 def test_create_weather_for_event(
-    mock_get_current_weather,
+    mock_get_weather_for_time,
     db_session,
 ):
     place = create_place(
@@ -89,7 +89,7 @@ def test_create_weather_for_event(
         plant_id=plant.id,
     )
 
-    mock_get_current_weather.return_value = WeatherData(
+    mock_get_weather_for_time.return_value = WeatherData(
         temperature=23.5,
         humidity=72,
         weather_condition="partly_cloudy",
@@ -115,9 +115,10 @@ def test_create_weather_for_event(
     assert snapshot.weather_condition == "partly_cloudy"
     assert snapshot.source == "open-meteo"
 
-    mock_get_current_weather.assert_called_once_with(
+    mock_get_weather_for_time.assert_called_once_with(
         latitude=37.2073,
         longitude=50.0039,
+        occurred_at=event.occurred_at,
     )
 
 
@@ -187,10 +188,10 @@ def test_create_weather_for_place_without_coordinates(
 
 
 @patch(
-    "app.services.event_weather_service.get_current_weather"
+    "app.services.event_weather_service.get_weather_for_time"
 )
 def test_create_weather_for_event_rejects_duplicate_snapshot(
-    mock_get_current_weather,
+    mock_get_weather_for_time,
     db_session,
 ):
     place = create_place(
@@ -207,7 +208,7 @@ def test_create_weather_for_event_rejects_duplicate_snapshot(
         plant_id=plant.id,
     )
 
-    mock_get_current_weather.return_value = WeatherData(
+    mock_get_weather_for_time.return_value = WeatherData(
         temperature=21.0,
         humidity=80,
         weather_condition="light_rain",
@@ -238,4 +239,4 @@ def test_create_weather_for_event_rejects_duplicate_snapshot(
             event_id=event.id,
         )
 
-    mock_get_current_weather.assert_called_once()
+    mock_get_weather_for_time.assert_called_once()

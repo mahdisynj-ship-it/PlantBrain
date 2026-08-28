@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import httpx
 
@@ -6,6 +6,7 @@ from app.services.weather_provider import WeatherData
 
 
 OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 
 def get_current_weather(
@@ -44,6 +45,123 @@ def get_current_weather(
             current["time"],
         ),
         source="open-meteo",
+    )
+
+
+def get_historical_weather(
+    latitude: float,
+    longitude: float,
+    occurred_at: datetime,
+) -> WeatherData:
+    date_string = occurred_at.date().isoformat()
+
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "start_date": date_string,
+        "end_date": date_string,
+        "hourly": (
+            "temperature_2m,"
+            "relative_humidity_2m,"
+            "weather_code"
+        ),
+        "timezone": "auto",
+    }
+
+    response = httpx.get(
+        OPEN_METEO_ARCHIVE_URL,
+        params=params,
+        timeout=10.0,
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+    hourly = data["hourly"]
+
+    target_index = _find_closest_hour_index(
+        times=hourly["time"],
+        occurred_at=occurred_at,
+    )
+
+    recorded_at = datetime.fromisoformat(
+        hourly["time"][target_index],
+    )
+
+    return WeatherData(
+        temperature=hourly["temperature_2m"][target_index],
+        humidity=hourly["relative_humidity_2m"][target_index],
+        weather_condition=_weather_code_to_condition(
+            hourly["weather_code"][target_index],
+        ),
+        recorded_at=recorded_at,
+        source="open-meteo-historical",
+    )
+
+
+def get_weather_for_time(
+    latitude: float,
+    longitude: float,
+    occurred_at: datetime,
+) -> WeatherData:
+    now = datetime.now(timezone.utc)
+
+    occurred_at_utc = _ensure_utc(
+        occurred_at,
+    )
+
+    if abs(now - occurred_at_utc) <= timedelta(hours=3):
+        return get_current_weather(
+            latitude=latitude,
+            longitude=longitude,
+        )
+
+    return get_historical_weather(
+        latitude=latitude,
+        longitude=longitude,
+        occurred_at=occurred_at,
+    )
+
+
+def _ensure_utc(
+    value: datetime,
+) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(
+            tzinfo=timezone.utc,
+        )
+
+    return value.astimezone(
+        timezone.utc,
+    )
+
+
+def _find_closest_hour_index(
+    times: list[str],
+    occurred_at: datetime,
+) -> int:
+    if not times:
+        raise ValueError(
+            "Historical weather response contains no hourly data"
+        )
+
+    target = occurred_at.replace(
+        minute=0,
+        second=0,
+        microsecond=0,
+        tzinfo=None,
+    )
+
+    parsed_times = [
+        datetime.fromisoformat(value)
+        for value in times
+    ]
+
+    return min(
+        range(len(parsed_times)),
+        key=lambda index: abs(
+            parsed_times[index] - target
+        ),
     )
 
 
