@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+from unittest.mock import patch
+
 from app.database.base import Base
 from tests.test_api import client, engine
 
@@ -56,10 +59,27 @@ def test_watering_analysis_api_with_no_events():
         "total_events": 0,
         "last_watered_at": None,
         "average_interval_days": None,
+        "days_since_last_watering": None,
+        "expected_next_watering_at": None,
+        "watering_status": "unknown",
     }
 
 
-def test_watering_analysis_api_with_events():
+@patch(
+    "app.services.care_analysis_service.datetime"
+)
+def test_watering_analysis_api_with_events(
+    mock_datetime,
+):
+    mock_datetime.now.return_value = datetime(
+        2026,
+        8,
+        21,
+        5,
+        30,
+        tzinfo=timezone.utc,
+    )
+
     plant = create_plant()
 
     create_event(
@@ -98,6 +118,9 @@ def test_watering_analysis_api_with_events():
     assert data["total_events"] == 3
     assert data["last_watered_at"] == "2026-08-11T09:00:00"
     assert data["average_interval_days"] == 5.0
+    assert data["days_since_last_watering"] == 10.0
+    assert data["expected_next_watering_at"] == "2026-08-16T09:00:00"
+    assert data["watering_status"] == "overdue"
 
 
 def test_watering_analysis_api_missing_plant():

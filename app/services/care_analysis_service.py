@@ -1,9 +1,13 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
 
 from app.database.models import Plant, PlantEvent
+
+
+LOCAL_TIMEZONE = ZoneInfo("Asia/Tehran")
 
 
 @dataclass
@@ -12,6 +16,9 @@ class WateringAnalysis:
     total_events: int
     last_watered_at: datetime | None
     average_interval_days: float | None
+    days_since_last_watering: float | None
+    expected_next_watering_at: datetime | None
+    watering_status: str
 
 
 def analyze_watering(
@@ -48,9 +55,29 @@ def analyze_watering(
             total_events=0,
             last_watered_at=None,
             average_interval_days=None,
+            days_since_last_watering=None,
+            expected_next_watering_at=None,
+            watering_status="unknown",
         )
 
     last_watered_at = watering_events[-1].occurred_at
+
+    now = datetime.now(
+        timezone.utc,
+    )
+
+    last_watered_at_utc = _ensure_utc(
+        last_watered_at,
+    )
+
+    days_since_last_watering = (
+        now - last_watered_at_utc
+    ).total_seconds() / 86400
+
+    days_since_last_watering = max(
+        0.0,
+        days_since_last_watering,
+    )
 
     if total_events == 1:
         return WateringAnalysis(
@@ -58,6 +85,9 @@ def analyze_watering(
             total_events=1,
             last_watered_at=last_watered_at,
             average_interval_days=None,
+            days_since_last_watering=days_since_last_watering,
+            expected_next_watering_at=None,
+            watering_status="unknown",
         )
 
     intervals = []
@@ -81,9 +111,63 @@ def analyze_watering(
         / len(intervals)
     )
 
+    expected_next_watering_at = (
+        last_watered_at
+        + timedelta(
+            days=average_interval_days,
+        )
+    )
+
+    expected_next_watering_at_utc = _ensure_utc(
+        expected_next_watering_at,
+    )
+
+    watering_status = _calculate_watering_status(
+        now=now,
+        expected_next_watering_at=expected_next_watering_at_utc,
+        average_interval_days=average_interval_days,
+    )
+
     return WateringAnalysis(
         plant_id=plant_id,
         total_events=total_events,
         last_watered_at=last_watered_at,
         average_interval_days=average_interval_days,
+        days_since_last_watering=days_since_last_watering,
+        expected_next_watering_at=expected_next_watering_at,
+        watering_status=watering_status,
     )
+
+
+def _ensure_utc(
+    value: datetime,
+) -> datetime:
+    if value.tzinfo is None:
+        value = value.replace(
+            tzinfo=LOCAL_TIMEZONE,
+        )
+
+    return value.astimezone(
+        timezone.utc,
+    )
+
+
+def _calculate_watering_status(
+    now: datetime,
+    expected_next_watering_at: datetime,
+    average_interval_days: float,
+) -> str:
+    due_window = timedelta(
+        days=max(
+            1.0,
+            average_interval_days * 0.15,
+        ),
+    )
+
+    if now < expected_next_watering_at - due_window:
+        return "not_due"
+
+    if now <= expected_next_watering_at + due_window:
+        return "due"
+
+    return "overdue"
