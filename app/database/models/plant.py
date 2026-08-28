@@ -1,6 +1,6 @@
 from datetime import date, datetime, timezone
 
-from sqlalchemy import Date, DateTime, Integer, String, Text
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -45,6 +45,15 @@ class Plant(Base):
         nullable=True,
     )
 
+    place_id: Mapped[int | None] = mapped_column(
+        ForeignKey(
+            "places.id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+        index=True,
+    )
+
     status: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
@@ -67,6 +76,11 @@ class Plant(Base):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    place: Mapped["Place | None"] = relationship(
+        "Place",
+        back_populates="plants",
     )
 
     events: Mapped[list["PlantEvent"]] = relationship(

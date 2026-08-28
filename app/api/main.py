@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
+from app.schemas.place import CreatePlace, PlaceResponse, UpdatePlace
 from app.schemas.plant import CreatePlant, PlantResponse, UpdatePlant
 from app.schemas.plant_event import (
     CreatePlantEvent,
@@ -19,6 +20,13 @@ from app.services.event_service import (
     get_event_by_id,
     get_plant_events,
     update_event,
+)
+from app.services.place_service import (
+    create_place,
+    delete_place,
+    get_place_by_id,
+    get_places,
+    update_place,
 )
 from app.services.plant_service import (
     create_plant,
@@ -57,18 +65,35 @@ def health_check():
     }
 
 
-@app.post("/plants", response_model=PlantResponse)
+# ---------------------------------------------------------
+# Plants
+# ---------------------------------------------------------
+
+
+@app.post(
+    "/plants",
+    response_model=PlantResponse,
+)
 def create_plant_endpoint(
     data: CreatePlant,
     session: Session = Depends(get_session),
 ):
-    return create_plant(
-        session=session,
-        data=data,
-    )
+    try:
+        return create_plant(
+            session=session,
+            data=data,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        )
 
 
-@app.get("/plants", response_model=list[PlantResponse])
+@app.get(
+    "/plants",
+    response_model=list[PlantResponse],
+)
 def get_plants_endpoint(
     session: Session = Depends(get_session),
 ):
@@ -77,7 +102,10 @@ def get_plants_endpoint(
     )
 
 
-@app.get("/plants/{plant_id}", response_model=PlantResponse)
+@app.get(
+    "/plants/{plant_id}",
+    response_model=PlantResponse,
+)
 def get_plant_endpoint(
     plant_id: int,
     session: Session = Depends(get_session),
@@ -96,17 +124,26 @@ def get_plant_endpoint(
     return plant
 
 
-@app.patch("/plants/{plant_id}", response_model=PlantResponse)
+@app.patch(
+    "/plants/{plant_id}",
+    response_model=PlantResponse,
+)
 def update_plant_endpoint(
     plant_id: int,
     data: UpdatePlant,
     session: Session = Depends(get_session),
 ):
-    plant = update_plant(
-        session=session,
-        plant_id=plant_id,
-        data=data,
-    )
+    try:
+        plant = update_plant(
+            session=session,
+            plant_id=plant_id,
+            data=data,
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        )
 
     if plant is None:
         raise HTTPException(
@@ -137,6 +174,11 @@ def delete_plant_endpoint(
         "message": "Plant deleted successfully",
         "plant_id": plant_id,
     }
+
+
+# ---------------------------------------------------------
+# Plant Events
+# ---------------------------------------------------------
 
 
 @app.get(
@@ -243,6 +285,11 @@ def delete_event_endpoint(
     }
 
 
+# ---------------------------------------------------------
+# Weather Snapshots
+# ---------------------------------------------------------
+
+
 @app.post(
     "/plant-events/{event_id}/weather",
     response_model=WeatherSnapshotResponse,
@@ -338,4 +385,103 @@ def delete_weather_snapshot_endpoint(
     return {
         "message": "Weather snapshot deleted successfully",
         "event_id": event_id,
+    }
+
+
+# ---------------------------------------------------------
+# Places
+# ---------------------------------------------------------
+
+
+@app.post(
+    "/places",
+    response_model=PlaceResponse,
+)
+def create_place_endpoint(
+    data: CreatePlace,
+    session: Session = Depends(get_session),
+):
+    return create_place(
+        session=session,
+        data=data,
+    )
+
+
+@app.get(
+    "/places",
+    response_model=list[PlaceResponse],
+)
+def get_places_endpoint(
+    session: Session = Depends(get_session),
+):
+    return get_places(
+        session=session,
+    )
+
+
+@app.get(
+    "/places/{place_id}",
+    response_model=PlaceResponse,
+)
+def get_place_endpoint(
+    place_id: int,
+    session: Session = Depends(get_session),
+):
+    place = get_place_by_id(
+        session=session,
+        place_id=place_id,
+    )
+
+    if place is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Place with id {place_id} not found",
+        )
+
+    return place
+
+
+@app.patch(
+    "/places/{place_id}",
+    response_model=PlaceResponse,
+)
+def update_place_endpoint(
+    place_id: int,
+    data: UpdatePlace,
+    session: Session = Depends(get_session),
+):
+    place = update_place(
+        session=session,
+        place_id=place_id,
+        data=data,
+    )
+
+    if place is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Place with id {place_id} not found",
+        )
+
+    return place
+
+
+@app.delete("/places/{place_id}")
+def delete_place_endpoint(
+    place_id: int,
+    session: Session = Depends(get_session),
+):
+    deleted = delete_place(
+        session=session,
+        place_id=place_id,
+    )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Place with id {place_id} not found",
+        )
+
+    return {
+        "message": "Place deleted successfully",
+        "place_id": place_id,
     }

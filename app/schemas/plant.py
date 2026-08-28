@@ -6,7 +6,10 @@ from pydantic import BaseModel, ConfigDict, Field
 class CreatePlant(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    name: str = Field(min_length=1, max_length=100)
+    name: str = Field(
+        min_length=1,
+        max_length=100,
+    )
 
     scientific_name: str | None = Field(
         default=None,
@@ -28,6 +31,11 @@ class CreatePlant(BaseModel):
     location: str | None = Field(
         default=None,
         max_length=150,
+    )
+
+    place_id: int | None = Field(
+        default=None,
+        gt=0,
     )
 
     status: str = Field(
@@ -69,6 +77,11 @@ class UpdatePlant(BaseModel):
         max_length=150,
     )
 
+    place_id: int | None = Field(
+        default=None,
+        gt=0,
+    )
+
     status: str | None = Field(
         default=None,
         max_length=20,
@@ -87,5 +100,6 @@ class PlantResponse(BaseModel):
     species: str | None
     acquired_at: date | None
     location: str | None
+    place_id: int | None
     status: str
     notes: str | None
