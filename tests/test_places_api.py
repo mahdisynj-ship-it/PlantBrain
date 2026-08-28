@@ -366,3 +366,81 @@ def test_delete_place_sets_plant_place_id_to_none():
     assert data["id"] == plant_id
     assert data["name"] == "فیکوس"
     assert data["place_id"] is None
+
+def test_create_place_with_valid_timezone():
+    response = client.post(
+        "/places",
+        json={
+            "name": "Bogota Home",
+            "city": "Bogota",
+            "latitude": 4.711,
+            "longitude": -74.0721,
+            "timezone": "America/Bogota",
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["timezone"] == "America/Bogota"
+
+
+def test_create_place_with_invalid_timezone():
+    response = client.post(
+        "/places",
+        json={
+            "name": "Invalid Timezone Place",
+            "timezone": "Asia/Tehraaan",
+        },
+    )
+
+    assert response.status_code == 422
+
+    data = response.json()
+
+    assert data["detail"][0]["loc"] == [
+        "body",
+        "timezone",
+    ]
+
+    assert (
+        "Invalid IANA timezone"
+        in data["detail"][0]["msg"]
+    )
+
+
+def test_update_place_with_invalid_timezone():
+    create_response = client.post(
+        "/places",
+        json={
+            "name": "Home",
+            "city": "Lahijan",
+            "timezone": "Asia/Tehran",
+        },
+    )
+
+    assert create_response.status_code == 200
+
+    place = create_response.json()
+
+    response = client.patch(
+        f"/places/{place['id']}",
+        json={
+            "timezone": "America/Bogotaa",
+        },
+    )
+
+    assert response.status_code == 422
+
+    data = response.json()
+
+    assert data["detail"][0]["loc"] == [
+        "body",
+        "timezone",
+    ]
+
+    assert (
+        "Invalid IANA timezone"
+        in data["detail"][0]["msg"]
+    )

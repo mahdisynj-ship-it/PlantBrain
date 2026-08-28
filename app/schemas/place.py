@@ -1,8 +1,25 @@
-from pydantic import BaseModel, ConfigDict, Field
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+def validate_timezone_name(
+    value: str,
+) -> str:
+    try:
+        ZoneInfo(value)
+    except ZoneInfoNotFoundError as error:
+        raise ValueError(
+            "Invalid IANA timezone"
+        ) from error
+
+    return value
 
 
 class CreatePlace(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
 
     name: str = Field(
         min_length=1,
@@ -32,9 +49,21 @@ class CreatePlace(BaseModel):
         max_length=100,
     )
 
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(
+        cls,
+        value: str,
+    ) -> str:
+        return validate_timezone_name(
+            value,
+        )
+
 
 class UpdatePlace(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+    )
 
     name: str | None = Field(
         default=None,
@@ -65,9 +94,24 @@ class UpdatePlace(BaseModel):
         max_length=100,
     )
 
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+
+        return validate_timezone_name(
+            value,
+        )
+
 
 class PlaceResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
 
     id: int
     name: str
