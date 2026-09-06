@@ -5,6 +5,7 @@ from app.database.session import SessionLocal
 from app.schemas.care_analysis import WateringAnalysisResponse
 from app.schemas.care_history import CareHistoryResponse
 from app.schemas.care_pattern import CarePatternResponse
+from app.schemas.plant_insight import PlantInsightResponse
 from app.schemas.place import (
     CreatePlace,
     PlaceResponse,
@@ -33,6 +34,9 @@ from app.services.care_history_service import (
 )
 from app.services.care_pattern_service import (
     get_care_pattern,
+)
+from app.services.plant_insight_service import (
+    get_plant_insight,
 )
 from app.services.event_service import (
     create_event,
@@ -245,6 +249,34 @@ def get_care_pattern_endpoint(
             session=session,
             plant_id=plant_id,
             period_days=period_days,
+        )
+    except ValueError as error:
+        message = str(error)
+
+        if "not found" in message:
+            raise HTTPException(
+                status_code=404,
+                detail=message,
+            )
+
+        raise HTTPException(
+            status_code=422,
+            detail=message,
+        )
+
+
+@app.get(
+    "/plants/{plant_id}/insights",
+    response_model=PlantInsightResponse,
+)
+def get_plant_insight_endpoint(
+    plant_id: int,
+    session: Session = Depends(get_session),
+):
+    try:
+        return get_plant_insight(
+            session=session,
+            plant_id=plant_id,
         )
     except ValueError as error:
         message = str(error)
