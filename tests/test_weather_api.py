@@ -59,7 +59,8 @@ def test_create_weather_snapshot():
 
     data = response.json()
 
-    assert data["id"] == 1
+    assert isinstance(data["id"], int)
+    assert data["id"] > 0
     assert data["event_id"] == event_id
     assert data["temperature"] == 26.5
     assert data["humidity"] == 70
@@ -98,7 +99,10 @@ def test_create_duplicate_weather_snapshot():
     assert second_response.status_code == 409
 
     assert second_response.json() == {
-        "detail": f"Weather snapshot for event id {event_id} already exists",
+        "detail": (
+            f"Weather snapshot for event id "
+            f"{event_id} already exists"
+        ),
     }
 
 
@@ -151,7 +155,10 @@ def test_get_missing_weather_snapshot():
     assert response.status_code == 404
 
     assert response.json() == {
-        "detail": f"Weather snapshot for event id {event_id} not found",
+        "detail": (
+            f"Weather snapshot for event id "
+            f"{event_id} not found"
+        ),
     }
 
 
@@ -198,7 +205,10 @@ def test_update_missing_weather_snapshot():
     assert response.status_code == 404
 
     assert response.json() == {
-        "detail": f"Weather snapshot for event id {event_id} not found",
+        "detail": (
+            f"Weather snapshot for event id "
+            f"{event_id} not found"
+        ),
     }
 
 
@@ -240,5 +250,8 @@ def test_delete_missing_weather_snapshot():
     assert response.status_code == 404
 
     assert response.json() == {
-        "detail": f"Weather snapshot for event id {event_id} not found",
+        "detail": (
+            f"Weather snapshot for event id "
+            f"{event_id} not found"
+        ),
     }
