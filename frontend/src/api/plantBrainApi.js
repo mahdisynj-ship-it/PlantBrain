@@ -26,6 +26,31 @@ export async function getPlantInsight(plantId) {
 }
 
 
+export async function getPlantEvents(plantId) {
+  return request(`/plants/${plantId}/events`);
+}
+
+
+export async function getCareHistory(
+  plantId,
+  periodDays = 90
+) {
+  return request(
+    `/plants/${plantId}/care-history?period_days=${periodDays}`
+  );
+}
+
+
+export async function getCarePattern(
+  plantId,
+  periodDays = 90
+) {
+  return request(
+    `/plants/${plantId}/care-pattern?period_days=${periodDays}`
+  );
+}
+
+
 export async function getDemoPlantsWithInsights() {
   const plants = await getPlants();
 
@@ -43,4 +68,27 @@ export async function getDemoPlantsWithInsights() {
       };
     })
   );
+}
+
+
+export async function getPlantDetailData(plant) {
+  const [
+    insight,
+    history,
+    pattern,
+    events,
+  ] = await Promise.all([
+    getPlantInsight(plant.id),
+    getCareHistory(plant.id),
+    getCarePattern(plant.id),
+    getPlantEvents(plant.id),
+  ]);
+
+  return {
+    ...plant,
+    insight,
+    history,
+    pattern,
+    events,
+  };
 }
