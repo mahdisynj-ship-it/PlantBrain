@@ -821,4 +821,55 @@ button {
   grid-template-columns: 1fr;
 }
 }
+.detail-summary-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detail-summary-grid .detail-metric:nth-child(even) {
+  border-left: 1px solid #e5e8e1;
+}
+
+.detail-summary-grid .detail-metric:nth-child(n + 3) {
+  border-top: 1px solid #e5e8e1;
+}
+
+.detail-summary-grid .detail-metric:nth-child(3) {
+  border-left: 0;
+}
+
+.detail-metric {
+  min-width: 0;
+}
+
+.detail-metric strong {
+  overflow-wrap: anywhere;
+}
+
+.history-grid {
+  grid-template-columns: 1fr;
+}
+
+.history-card {
+  min-height: auto;
+}
+
+.pattern-analysis-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.pattern-analysis-grid .detail-metric {
+  min-height: 100px;
+}
+
+.pattern-analysis-grid .detail-metric:nth-child(even) {
+  border-left: 1px solid #e5e8e1;
+}
+
+.pattern-analysis-grid .detail-metric:last-child {
+  grid-column: 1 / -1;
+}
+
+.pattern-analysis-grid .detail-metric:last-child strong {
+  font-size: 18px;
+}
 }

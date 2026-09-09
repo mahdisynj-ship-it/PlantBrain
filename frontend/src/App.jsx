@@ -10,6 +10,7 @@ import {
   getDemoPlantsWithInsights,
   getPlantDetailData,
 } from "./api/plantBrainApi";
+
 import CareVisualizations from "./components/CareVisualizations";
 
 
@@ -84,15 +85,9 @@ function App() {
 
   if (selectedPlant) {
     return (
-      <AppLayout
-        error={detailError}
-        activeSection="plants"
-      >
+      <AppLayout error={detailError}>
         <PlantDetail
-          plant={
-            plantDetail ||
-            selectedPlant
-          }
+          plant={plantDetail || selectedPlant}
           loading={detailLoading}
           error={detailError}
           onBack={closePlantDetail}
@@ -102,10 +97,7 @@ function App() {
   }
 
   return (
-    <AppLayout
-      error={error}
-      activeSection="dashboard"
-    >
+    <AppLayout error={error}>
       <Dashboard
         plants={plants}
         loading={loading}
@@ -120,7 +112,6 @@ function App() {
 function AppLayout({
   children,
   error,
-  activeSection,
 }) {
   return (
     <div className="app">
@@ -139,34 +130,9 @@ function AppLayout({
         </div>
 
         <nav className="navigation">
-          <a
-            className={`nav-item ${
-              activeSection === "dashboard"
-                ? "active"
-                : ""
-            }`}
-            href="#"
-          >
+          <span className="nav-item active">
             Dashboard
-          </a>
-
-          <a
-            className={`nav-item ${
-              activeSection === "plants"
-                ? "active"
-                : ""
-            }`}
-            href="#"
-          >
-            Plants
-          </a>
-
-          <a
-            className="nav-item"
-            href="#"
-          >
-            Insights
-          </a>
+          </span>
         </nav>
 
         <div className="sidebar-footer">
@@ -242,10 +208,6 @@ function Dashboard({
             Here's what your plants need today.
           </p>
         </div>
-
-        <button className="add-button">
-          + Add plant
-        </button>
       </header>
 
       <section className="summary-grid">
@@ -300,10 +262,6 @@ function Dashboard({
 
             <h3>Plants</h3>
           </div>
-
-          <button className="text-button">
-            View all →
-          </button>
         </div>
 
         {loading && (
@@ -667,7 +625,10 @@ function PlantDetail({
           )}
         </div>
       </section>
-      <CareVisualizations events={plant.events || []} />
+
+      <CareVisualizations
+        events={plant.events || []}
+      />
 
       <section className="detail-section">
         <div className="detail-section-heading">
@@ -847,7 +808,8 @@ function formatDate(value) {
     return "No data";
   }
 
-  const date = new Date(value);
+  const date =
+    new Date(value);
 
   return new Intl.DateTimeFormat(
     "en",
