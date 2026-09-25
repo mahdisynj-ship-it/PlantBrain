@@ -240,6 +240,8 @@ The current implementation includes an Open-Meteo weather provider.
 
 ## Architecture
 
+For a detailed view of the system architecture, data model, analytical pipeline, and timezone strategy, see [Architecture Documentation](docs/ARCHITECTURE.md).
+
 PlantBrain uses a layered backend structure:
 
 ```text
@@ -431,10 +433,10 @@ Demo records are explicitly marked so they can be distinguished from other local
 
 The project includes automated tests covering API behavior, services, care analysis, pattern detection, weather handling, timezone conversion, plants, places, and events.
 
-Current test suite:
+Current PlantBrain v1 test suite:
 
 ```text
-158 passed
+158 tests passing
 ```
 
 Run the tests with:
