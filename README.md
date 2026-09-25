@@ -1,59 +1,124 @@
 # PlantBrain
 
-**A data-driven plant care system that transforms care records, location context, and weather data into explainable insights.**
+**A data-driven plant care system that turns care history into transparent, explainable insights.**
 
-PlantBrain is a full-stack portfolio project built to explore how structured plant-care data can be turned into useful, understandable recommendations.
+PlantBrain is a full-stack portfolio project exploring how structured plant-care records can be transformed into useful recommendations through simple statistical analysis and deterministic rules.
 
-Instead of only storing watering and care records, PlantBrain analyzes care history, detects patterns, evaluates watering timing, and presents the results through a responsive dashboard.
+Rather than acting only as a CRUD tracker or fixed reminder system, PlantBrain analyzes a plant's own recorded care history, identifies patterns in watering behavior, evaluates current watering timing, and presents the reasoning through a responsive interface.
+
+> **PlantBrain v1 does not use machine learning.**
+>
+> Its analytical layer is intentionally simple and explainable: recommendations are derived from recorded care events, interval statistics, and deterministic rules that can be traced and tested.
 
 ---
 
 ## Overview
 
-Most plant-care trackers focus on recording actions or sending fixed reminders.
+Most basic plant-care trackers answer questions such as:
 
-PlantBrain explores a different approach:
+- When did I last water this plant?
+- What care events have I recorded?
+- When should I set the next reminder?
 
-> What if plant-care recommendations were based on the plant's own recorded history and context?
+PlantBrain explores a different question:
 
-The system combines:
+> **What can the plant's own care history tell us about its current care needs?**
+
+The system works with:
 
 - plant information
 - care events
 - location and timezone context
-- weather snapshots
 - historical care intervals
-- pattern analysis
+- pattern statistics
+- weather snapshots
 
-to generate explainable plant-care insights.
+and turns the relevant historical care data into explainable plant-care insights.
 
-The current version focuses primarily on **watering behavior** while maintaining a data model that can support multiple care-event types.
+PlantBrain v1 focuses primarily on **watering behavior**.
 
 ---
 
-## What PlantBrain Does
+## Product Preview
 
-PlantBrain currently supports:
+PlantBrain includes a responsive dashboard and plant-detail analytical view.
 
-- Plant and location management
-- Plant care event tracking
-- Weather snapshots associated with care events
-- Timezone-aware event handling
-- Historical care statistics
-- Watering interval analysis
-- Care-pattern detection
-- Watering status classification
-- Explainable recommendations
-- Deterministic demo data
-- Responsive dashboard and plant-detail views
-- Data visualization of care activity and watering consistency
-- REST API with automated test coverage
+### Dashboard
+
+The dashboard provides an overview of the demo plant collection and groups plants into states such as:
+
+- Needs attention
+- On schedule
+- Learning
+
+Each plant card shows current watering status, recent watering timing, average watering cycle, historical regularity, and a recommendation.
+
+> Dashboard screenshot will be added here.
+
+### Plant Detail
+
+The plant-detail view exposes the reasoning behind the summary.
+
+It includes:
+
+- current watering status
+- days since last watering
+- average watering interval
+- expected next watering date
+- recommendation and priority
+- care-history statistics
+- care activity visualization
+- watering interval history
+- interval variability
+- regularity classification
+- interval trend
+
+> Plant-detail screenshot will be added here.
+
+### Responsive UI
+
+The interface is designed for both desktop and mobile layouts.
+
+> Mobile screenshot will be added here.
+
+---
+
+## What PlantBrain Actually Analyzes
+
+The analytical layer in PlantBrain v1 is intentionally transparent.
+
+It does not attempt to predict plant biology using a machine-learning model.
+
+Instead, it asks:
+
+1. When was this plant watered?
+2. What were the intervals between watering events?
+3. What is the average interval?
+4. How much do those intervals vary?
+5. Are the intervals becoming longer or shorter?
+6. How does the current time compare with the plant's recent watering pattern?
+
+These calculations are then translated into user-facing states and recommendations.
+
+This approach was chosen because the goal of v1 is not maximum predictive complexity. The goal is to demonstrate a complete and testable path from:
+
+```text
+Recorded Data
+      ↓
+Statistical Analysis
+      ↓
+Rule-Based Interpretation
+      ↓
+Explainable Insight
+      ↓
+User-Facing Recommendation
+```
 
 ---
 
 ## From Raw Data to Insight
 
-PlantBrain separates recorded facts from derived analysis.
+PlantBrain separates source data from derived analysis.
 
 ```text
 Plant
@@ -66,80 +131,75 @@ Plant
   │      ├── Pruning
   │      └── Repotting
   │
-  └── Weather Context
+  └── Weather Snapshots
           │
           ▼
-     Care History
+     Structured History
           │
           ▼
-    Pattern Analysis
+     Care Statistics
           │
           ▼
-   Watering Analysis
+     Pattern Analysis
           │
           ▼
-       Insight
+    Watering Analysis
           │
           ▼
-  Recommendation
+        Insight
           │
           ▼
-      Dashboard
+   Recommendation
+          │
+          ▼
+         UI
 ```
 
-For example, watering records can be transformed into:
+For watering specifically:
 
 ```text
 Watering timestamps
         ↓
-Intervals between watering events
+Intervals between events
         ↓
 Average interval + variability
         ↓
-Regularity + trend
+Regularity + interval trend
         ↓
-Current watering status
+Current watering timing
         ↓
-Explainable recommendation
+Watering status
+        ↓
+Recommendation
 ```
 
-This makes the recommendation traceable back to recorded data rather than presenting it as an unexplained prediction.
+Because these steps are deterministic, the final recommendation can be traced back to the recorded events that produced it.
 
 ---
 
-## Dashboard
+## Core Features
 
-The dashboard provides a quick overview of the demo plant collection.
+PlantBrain v1 currently includes:
 
-It summarizes plants into states such as:
-
-- Needs attention
-- On schedule
-- Learning
-
-Each plant card displays its current watering status, recent watering timing, average watering cycle, detected care pattern, and recommendation.
-
-The interface consumes live data from the PlantBrain API rather than using hard-coded dashboard values.
-
----
-
-## Plant Detail
-
-Selecting a plant opens a detailed analytical view containing:
-
-- current watering status
-- days since last watering
-- average watering interval
-- expected next watering date
-- recommendation priority
-- care history
-- activity breakdown
-- watering interval history
-- interval variability
-- regularity classification
-- watering trend
-
-The UI is responsive and designed to work across desktop and mobile layouts.
+- Plant management
+- Location management
+- Multiple care-event types
+- Weather snapshots associated with care events
+- IANA timezone support
+- UTC-normalized semantic timestamps
+- Historical care statistics
+- Watering interval analysis
+- Care regularity classification
+- Care interval trend analysis
+- Watering status classification
+- Explainable recommendations
+- Deterministic demo scenarios
+- Responsive React dashboard
+- Plant-detail analytical view
+- Care activity visualization
+- Watering consistency visualization
+- REST API
+- Automated test suite
 
 ---
 
@@ -147,9 +207,9 @@ The UI is responsive and designed to work across desktop and mobile layouts.
 
 ### Watering Status
 
-PlantBrain evaluates the current watering state using historical watering intervals.
+PlantBrain uses historical watering timing to classify the current state.
 
-Possible states include:
+Possible states are:
 
 ```text
 unknown
@@ -158,13 +218,21 @@ due
 overdue
 ```
 
-When enough watering history exists, the system calculates an expected next watering time and compares the current time against that historical pattern.
+When sufficient history exists, the system calculates the average watering interval and derives an expected next watering time.
 
-### Care Regularity
+The current time is then evaluated against that historical pattern.
 
-Recorded intervals are analyzed for consistency.
+A tolerance window is used around the expected watering time so that a plant does not move directly from `not_due` to `overdue` at a single exact timestamp.
 
-Possible classifications include:
+---
+
+## Care Regularity
+
+PlantBrain calculates the intervals between repeated care events.
+
+For event types with enough interval history, it evaluates variability relative to the average interval.
+
+Possible classifications are:
 
 ```text
 insufficient_data
@@ -173,11 +241,19 @@ moderately_irregular
 irregular
 ```
 
-### Interval Trend
+This is a simple statistical classification rather than a learned model.
+
+Its purpose is to answer a practical question:
+
+> Has this type of care been happening at roughly consistent intervals?
+
+---
+
+## Interval Trend
 
 PlantBrain also evaluates whether care intervals are changing over time.
 
-Possible results include:
+Possible states include:
 
 ```text
 insufficient_data
@@ -186,13 +262,21 @@ increasing_interval
 decreasing_interval
 ```
 
-Together, these signals help distinguish the plant's current watering timing from its longer-term care pattern.
+The analysis compares earlier and later portions of the interval history.
+
+This allows PlantBrain to distinguish between:
+
+- consistent care
+- increasingly spaced care
+- increasingly frequent care
+
+without treating those states as unexplained predictions.
 
 ---
 
 ## Explainable Recommendations
 
-PlantBrain converts analytical results into simple recommendations.
+Analytical results are converted into a small set of user-facing actions.
 
 Examples include:
 
@@ -203,60 +287,78 @@ monitor
 collect_more_data
 ```
 
-Recommendations also include a priority and human-readable message.
+A recommendation contains:
+
+- an action
+- a priority
+- a human-readable message
 
 For example:
 
 ```text
-Status: overdue
+Watering status: overdue
 Priority: high
 Action: water_now
-
-"This plant is overdue for watering based on its recent care pattern."
 ```
 
-The goal is not to create an opaque prediction system, but to make the reasoning visible and understandable.
+The important architectural principle is that the recommendation is **derived**, not stored as the original source of truth.
+
+If the underlying care history changes, the analysis can be recalculated.
 
 ---
 
-## Weather and Timezone Context
+## Weather: Current Role in V1
 
-PlantBrain supports location-aware care records.
+PlantBrain includes a weather layer and can associate weather snapshots with plant-care events.
 
-Each place can store:
+Weather data can contain information such as:
 
-- city
-- latitude
-- longitude
-- IANA timezone
+- temperature
+- humidity
+- condition
+- observation time
+- source
 
-Internally, semantic event and weather timestamps are normalized to UTC before storage and converted back into the relevant local timezone when local context is required.
+The current implementation includes an Open-Meteo provider.
 
-Weather snapshots can be associated with plant-care events, providing a foundation for future environmental analysis.
+However, **PlantBrain v1 does not currently use weather conditions to modify watering recommendations or care-pattern classifications.**
 
-The current implementation includes an Open-Meteo weather provider.
+This is intentional.
+
+The weather layer currently demonstrates:
+
+- integration with an external data source
+- environmental context attached to historical events
+- timezone-aware weather timestamps
+- a data foundation for future environmental analysis
+
+Using weather to modify watering recommendations would require additional assumptions about factors such as plant species, indoor/outdoor conditions, soil, sunlight, temperature exposure, and humidity.
+
+Rather than introduce an unsupported rule such as "hot weather means water sooner," v1 keeps the recommendation engine based on the care history it can explain directly.
 
 ---
 
 ## Architecture
 
-For a detailed view of the system architecture, data model, analytical pipeline, and timezone strategy, see [Architecture Documentation](docs/ARCHITECTURE.md).
+For a detailed view of the system architecture, data model, analytical pipeline, and timezone strategy, see:
 
-PlantBrain uses a layered backend structure:
+**[PlantBrain Architecture Documentation](docs/ARCHITECTURE.md)**
+
+At a high level:
 
 ```text
 React Frontend
       │
       │ HTTP / JSON
       ▼
-FastAPI API Layer
+FastAPI API
       │
       ▼
 Service Layer
       │
-      ├── Plant Service
-      ├── Event Service
-      ├── Weather Service
+      ├── Plant / Place Services
+      ├── Event Services
+      ├── Weather Services
       ├── Care History Service
       ├── Care Pattern Service
       ├── Care Analysis Service
@@ -266,10 +368,177 @@ Service Layer
 SQLAlchemy Models
       │
       ▼
-SQLite Database
+SQLite
 ```
 
-The analysis logic lives in dedicated service modules instead of being embedded directly inside API endpoints or UI components.
+The analytical logic lives in dedicated service modules rather than inside React components or API endpoint functions.
+
+---
+
+## Design Decisions & Trade-offs
+
+PlantBrain v1 deliberately favors clarity, testability, and explainability over production-scale complexity.
+
+### Why FastAPI?
+
+FastAPI was selected because the project is strongly API- and data-oriented.
+
+It provides:
+
+- clear request and response models
+- straightforward dependency injection
+- automatic OpenAPI documentation
+- strong integration with Python type hints
+- a lightweight structure suitable for separating API endpoints from analytical services
+
+For a larger application with extensive server-rendered features, built-in administration, or a broader monolithic product surface, a framework such as Django could offer different advantages.
+
+For PlantBrain's current scope, FastAPI keeps the backend focused on its REST and analytical responsibilities.
+
+### Why SQLite?
+
+PlantBrain v1 is a portfolio and demonstration system rather than a multi-user production SaaS.
+
+SQLite provides:
+
+- simple local setup
+- no separate database server
+- deterministic demo behavior
+- easy development and testing
+- sufficient relational modeling for the current scope
+
+A production multi-user deployment would likely require moving to a database such as PostgreSQL.
+
+Keeping SQLite in v1 avoids adding infrastructure that would not demonstrate additional analytical capability.
+
+### Why SQLAlchemy and Alembic?
+
+The application still benefits from explicit relational models and controlled schema evolution even though it uses SQLite.
+
+SQLAlchemy provides the ORM layer, while Alembic records database migrations as the model evolves.
+
+This keeps database changes reproducible rather than relying on an undocumented local database state.
+
+### Why Normalize Time to UTC?
+
+Care events happen in local time, but plants can belong to places with different timezones.
+
+Storing timestamps without a consistent temporal contract can make historical comparisons unreliable.
+
+PlantBrain therefore treats timezone handling as part of the domain model:
+
+```text
+Local Event Time
+      ↓
+Plant Place Timezone
+      ↓
+Normalize to UTC
+      ↓
+Store
+      ↓
+Convert back to local context when required
+```
+
+This adds implementation complexity, but prevents care analysis from depending on the machine's local timezone.
+
+### Why Statistical and Rule-Based Analysis Instead of Machine Learning?
+
+Machine learning would increase the apparent technical complexity of the project, but PlantBrain does not currently have the volume or quality of biological training data required to justify such a model.
+
+Using ML in that situation could make recommendations harder to explain without making them more trustworthy.
+
+PlantBrain v1 therefore uses:
+
+- event intervals
+- averages
+- interval variability
+- simple trend comparison
+- deterministic status rules
+
+The trade-off is limited predictive sophistication in exchange for:
+
+- transparency
+- reproducibility
+- testability
+- explainability
+
+This is a deliberate product and engineering decision.
+
+### Why Keep Weather if It Does Not Drive Recommendations Yet?
+
+Weather integration establishes environmental context and demonstrates the ability to combine internal event data with an external provider.
+
+The trade-off is that the current model contains contextual data that is not yet part of the recommendation calculation.
+
+Rather than hide that limitation, PlantBrain documents it explicitly.
+
+A future version could investigate whether weather meaningfully improves recommendations once enough relevant variables and evidence are available.
+
+### Why No Authentication in V1?
+
+Authentication is intentionally outside the v1 scope.
+
+Implementing accounts, sessions, authorization, password recovery, and user ownership would add substantial product surface without strengthening the central data-to-insight demonstration.
+
+If the project is deployed publicly, the portfolio demo should therefore be exposed in a **read-only or otherwise protected demo configuration** so visitors cannot modify the shared dataset.
+
+### Why Deterministic Demo Data?
+
+A portfolio reviewer should not have to spend days recording watering events before the analytical features become visible.
+
+The seed script creates controlled scenarios representing states such as:
+
+- regular care
+- overdue watering
+- irregular intervals
+- insufficient data
+
+This makes the analytical behavior immediately inspectable and reproducible.
+
+---
+
+## Data Model
+
+The main persisted entities are:
+
+```text
+Place
+  │
+  └── Plant
+        │
+        └── Plant Event
+                │
+                └── Weather Snapshot
+```
+
+### Place
+
+Stores location context such as:
+
+- name
+- city
+- latitude
+- longitude
+- timezone
+
+### Plant
+
+Stores plant identity and links a plant to a place.
+
+### Plant Event
+
+Represents a recorded care action such as:
+
+- watering
+- fertilizing
+- pruning
+- repotting
+
+### Weather Snapshot
+
+Stores environmental context associated with a care event.
+
+Derived insights and recommendations are not treated as the original source data.
 
 ---
 
@@ -334,7 +603,7 @@ frontend/src/
 └── main.jsx
 ```
 
-The frontend retrieves plant and analytical data from the FastAPI backend and converts it into dashboard, detail, and visualization views.
+The frontend retrieves analytical results from the API rather than reproducing the backend decision rules.
 
 ---
 
@@ -366,9 +635,7 @@ The frontend retrieves plant and analytical data from the FastAPI backend and co
 
 ## API
 
-PlantBrain exposes REST endpoints for its core resources and analytical services.
-
-Examples include:
+Examples of the REST endpoints used by the application include:
 
 ```http
 GET /plants
@@ -378,7 +645,7 @@ GET /plants/{plant_id}/care-pattern
 GET /plants/{plant_id}/insights
 ```
 
-A plant insight response combines several analytical layers into a frontend-friendly result.
+A plant insight response combines multiple analytical results into a frontend-friendly representation.
 
 Example:
 
@@ -404,42 +671,56 @@ Example:
 }
 ```
 
-FastAPI also provides interactive API documentation while the backend is running.
+FastAPI provides interactive OpenAPI documentation while the backend is running.
 
 ---
 
 ## Demo Data
 
-PlantBrain includes a deterministic demo-data script:
+PlantBrain includes a deterministic demo-data generator:
 
 ```bash
 python -m scripts.seed_demo_data
 ```
 
-The demo dataset creates multiple plants with different care histories so the UI can demonstrate different analytical states.
+The seed creates multiple plants with intentionally different histories.
 
-Examples include plants with:
+This allows the UI to demonstrate analytical states such as:
 
-- regular watering patterns
-- overdue watering
-- irregular watering intervals
-- insufficient historical data
+```text
+regular + due
+regular + overdue
+irregular + not_due
+insufficient_data
+```
 
-Demo records are explicitly marked so they can be distinguished from other local data.
+Demo records are explicitly marked so they can be distinguished from other local records.
 
 ---
 
 ## Testing
 
-The project includes automated tests covering API behavior, services, care analysis, pattern detection, weather handling, timezone conversion, plants, places, and events.
+The automated test suite covers areas including:
 
-Current PlantBrain v1 test suite:
+- API behavior
+- plant services
+- event services
+- places
+- weather
+- external weather-provider behavior
+- timezone utilities
+- care history
+- care analysis
+- care patterns
+- insight generation
+
+Current PlantBrain v1 checkpoint:
 
 ```text
 158 tests passing
 ```
 
-Run the tests with:
+Run the suite with:
 
 ```bash
 pytest -q
@@ -456,7 +737,7 @@ git clone <repository-url>
 cd PlantBrain
 ```
 
-### 2. Create a Python virtual environment
+### 2. Create and activate a virtual environment
 
 ```bash
 python -m venv .venv
@@ -487,7 +768,7 @@ python -m scripts.seed_demo_data
 python -m uvicorn app.api.main:app --reload
 ```
 
-The API will be available at:
+Backend:
 
 ```text
 http://127.0.0.1:8000
@@ -503,7 +784,7 @@ npm install
 npm run dev
 ```
 
-The frontend will be available at:
+Frontend:
 
 ```text
 http://localhost:5173
@@ -513,8 +794,6 @@ http://localhost:5173
 
 ## Production Build
 
-To create a frontend production build:
-
 ```bash
 cd frontend
 npm run build
@@ -522,39 +801,42 @@ npm run build
 
 ---
 
-## Project Scope
+## V1 Scope and Limitations
 
-PlantBrain v1 is intentionally focused on demonstrating the complete path from structured data to analysis to user-facing insight.
-
-The following features are intentionally outside the v1 scope:
+PlantBrain v1 intentionally does **not** include:
 
 - authentication
 - multiple users
 - payments
 - notifications
-- native mobile applications
+- native mobile apps
 - IoT sensors
 - machine-learning models
-- LLM-based recommendations
+- LLM-generated recommendations
 - disease detection
 - greenhouse management
 - social features
 
-This scope keeps the project focused on data modeling, backend architecture, analytical logic, explainability, testing, and frontend presentation.
+It also does not claim that historical watering intervals alone are sufficient to determine a plant's biological water requirements.
 
-See [`PLANTBRAIN_V1_SCOPE.md`](PLANTBRAIN_V1_SCOPE.md) for the dedicated v1 scope document.
+The recommendation engine should be understood as an **explainable analysis of recorded care behavior**, not as a replacement for horticultural expertise.
+
+See [`PLANTBRAIN_V1_SCOPE.md`](PLANTBRAIN_V1_SCOPE.md) for the dedicated scope document.
 
 ---
 
 ## Current Status
 
-PlantBrain v1 currently includes:
+Implemented:
 
-- backend data model
-- database migrations
-- plant-care event tracking
-- weather integration
-- timezone-aware event processing
+- relational backend data model
+- Alembic migrations
+- plant and place management
+- care-event tracking
+- weather snapshots
+- Open-Meteo integration
+- timezone-aware processing
+- UTC normalization
 - care-history statistics
 - care-pattern analysis
 - watering analysis
@@ -563,25 +845,38 @@ PlantBrain v1 currently includes:
 - responsive React dashboard
 - plant-detail analytics
 - care visualizations
-- automated test suite
+- automated tests
+- architecture documentation
 
-The remaining portfolio work focuses on documentation, architecture visuals, screenshots, and deployment.
+Portfolio finishing work:
+
+- product screenshots
+- public demo deployment
+- portfolio case study
+- final repository cleanup
 
 ---
 
 ## Project Goals
 
-PlantBrain was built as a portfolio project to demonstrate work across:
+PlantBrain was built to demonstrate work across:
 
 - product thinking
 - data modeling
 - API design
 - backend development
-- analytical logic
+- statistical reasoning
+- deterministic decision logic
 - automated testing
+- external API integration
 - frontend development
 - data visualization
 - responsive UI design
+- technical documentation
 - explainable data-driven decision support
 
-The project emphasizes the reasoning between **data collection and user-facing recommendations**, not just the final interface.
+The central idea is not simply to store plant-care data.
+
+It is to demonstrate the reasoning layer between:
+
+**what was recorded → what the data suggests → what the user sees.**
