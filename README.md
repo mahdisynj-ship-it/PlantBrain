@@ -41,45 +41,37 @@ PlantBrain v1 focuses primarily on **watering behavior**.
 
 ## Product Preview
 
-PlantBrain includes a responsive dashboard and plant-detail analytical view.
+PlantBrain includes a responsive dashboard and plant-detail analytical view designed to make care history and derived insights easy to understand.
 
 ### Dashboard
 
-The dashboard provides an overview of the demo plant collection and groups plants into states such as:
+The dashboard provides an overview of the demo plant collection and groups plants by their current care state.
 
-- Needs attention
-- On schedule
-- Learning
+![PlantBrain dashboard](docs/images/dashboard-desktop.png)
 
-Each plant card shows current watering status, recent watering timing, average watering cycle, historical regularity, and a recommendation.
-
-> Dashboard screenshot will be added here.
+Each plant card summarizes current watering status, recent watering timing, average watering cycle, historical regularity, and the current recommendation.
 
 ### Plant Detail
 
-The plant-detail view exposes the reasoning behind the summary.
+The plant-detail view exposes the reasoning behind the dashboard summary, including watering timing, expected next watering, recommendation priority, and recent care history.
 
-It includes:
+![PlantBrain plant detail](docs/images/plant-detail-desktop.png)
 
-- current watering status
-- days since last watering
-- average watering interval
-- expected next watering date
-- recommendation and priority
-- care-history statistics
-- care activity visualization
-- watering interval history
-- interval variability
-- regularity classification
-- interval trend
+### Care Analytics
 
-> Plant-detail screenshot will be added here.
+Historical care events are transformed into simple, explainable visualizations and statistical summaries.
+
+![PlantBrain care analytics](docs/images/analytics-desktop.png)
+
+The analytical view shows recorded care-event frequency, actual watering intervals, average interval, variability, regularity, and interval trend.
 
 ### Responsive UI
 
-The interface is designed for both desktop and mobile layouts.
+PlantBrain is designed to preserve the same information hierarchy and recommendation logic on smaller screens.
 
-> Mobile screenshot will be added here.
+<p align="center">
+  <img src="docs/images/plant-detail-mobile.png" alt="PlantBrain mobile plant detail" width="390">
+</p>
 
 ---
 
@@ -143,7 +135,7 @@ Plant
      Pattern Analysis
           │
           ▼
-    Watering Analysis
+     Watering Analysis
           │
           ▼
         Insight
@@ -847,10 +839,10 @@ Implemented:
 - care visualizations
 - automated tests
 - architecture documentation
+- product screenshots
 
 Portfolio finishing work:
 
-- product screenshots
 - public demo deployment
 - portfolio case study
 - final repository cleanup
