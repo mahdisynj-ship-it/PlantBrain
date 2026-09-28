@@ -30,18 +30,9 @@ from app.schemas.weather_snapshot import (
     UpdateWeatherSnapshot,
     WeatherSnapshotResponse,
 )
-from app.services.care_analysis_service import (
-    analyze_watering,
-)
-from app.services.care_history_service import (
-    get_care_history,
-)
-from app.services.care_pattern_service import (
-    get_care_pattern,
-)
-from app.services.plant_insight_service import (
-    get_plant_insight,
-)
+from app.services.care_analysis_service import analyze_watering
+from app.services.care_history_service import get_care_history
+from app.services.care_pattern_service import get_care_pattern
 from app.services.event_service import (
     create_event,
     delete_event,
@@ -49,9 +40,7 @@ from app.services.event_service import (
     get_plant_events,
     update_event,
 )
-from app.services.event_weather_service import (
-    create_weather_for_event,
-)
+from app.services.event_weather_service import create_weather_for_event
 from app.services.place_service import (
     create_place,
     delete_place,
@@ -59,6 +48,7 @@ from app.services.place_service import (
     get_places,
     update_place,
 )
+from app.services.plant_insight_service import get_plant_insight
 from app.services.plant_service import (
     create_plant,
     delete_plant,
@@ -74,18 +64,37 @@ from app.services.weather_service import (
 )
 
 
+# ---------------------------------------------------------
+# Application
+# ---------------------------------------------------------
+
 app = FastAPI(
     title="PlantBrain API",
     version="0.1.0",
 )
 
 
+# ---------------------------------------------------------
+# CORS
+# ---------------------------------------------------------
+
+FRONTEND_ORIGIN = os.getenv(
+    "PLANTBRAIN_FRONTEND_ORIGIN",
+    "",
+).strip().rstrip("/")
+
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+if FRONTEND_ORIGIN:
+    ALLOWED_ORIGINS.append(FRONTEND_ORIGIN)
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -96,7 +105,10 @@ app.add_middleware(
 # Public Demo Protection
 # ---------------------------------------------------------
 
-DEMO_MODE = os.getenv("PLANTBRAIN_DEMO_MODE", "").lower() in {
+DEMO_MODE = os.getenv(
+    "PLANTBRAIN_DEMO_MODE",
+    "",
+).lower() in {
     "1",
     "true",
     "yes",
@@ -126,6 +138,10 @@ async def protect_public_demo(request, call_next):
     return await call_next(request)
 
 
+# ---------------------------------------------------------
+# Database Session
+# ---------------------------------------------------------
+
 def get_session():
     session = SessionLocal()
 
@@ -134,6 +150,10 @@ def get_session():
     finally:
         session.close()
 
+
+# ---------------------------------------------------------
+# Health
+# ---------------------------------------------------------
 
 @app.get("/health")
 def health_check():
@@ -194,9 +214,7 @@ def get_plant_endpoint(
     if plant is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Plant with id {plant_id} not found"
-            ),
+            detail=f"Plant with id {plant_id} not found",
         )
 
     return plant
@@ -226,9 +244,7 @@ def update_plant_endpoint(
     if plant is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Plant with id {plant_id} not found"
-            ),
+            detail=f"Plant with id {plant_id} not found",
         )
 
     return plant
@@ -355,9 +371,7 @@ def delete_plant_endpoint(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Plant with id {plant_id} not found"
-            ),
+            detail=f"Plant with id {plant_id} not found",
         )
 
     return {
@@ -422,9 +436,7 @@ def get_event_endpoint(
     if event is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Event with id {event_id} not found"
-            ),
+            detail=f"Event with id {event_id} not found",
         )
 
     return event
@@ -448,9 +460,7 @@ def update_event_endpoint(
     if event is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Event with id {event_id} not found"
-            ),
+            detail=f"Event with id {event_id} not found",
         )
 
     return event
@@ -469,9 +479,7 @@ def delete_event_endpoint(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Event with id {event_id} not found"
-            ),
+            detail=f"Event with id {event_id} not found",
         )
 
     return {
@@ -616,9 +624,7 @@ def delete_weather_snapshot_endpoint(
         )
 
     return {
-        "message": (
-            "Weather snapshot deleted successfully"
-        ),
+        "message": "Weather snapshot deleted successfully",
         "event_id": event_id,
     }
 
@@ -669,9 +675,7 @@ def get_place_endpoint(
     if place is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Place with id {place_id} not found"
-            ),
+            detail=f"Place with id {place_id} not found",
         )
 
     return place
@@ -695,9 +699,7 @@ def update_place_endpoint(
     if place is None:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Place with id {place_id} not found"
-            ),
+            detail=f"Place with id {place_id} not found",
         )
 
     return place
@@ -716,9 +718,7 @@ def delete_place_endpoint(
     if not deleted:
         raise HTTPException(
             status_code=404,
-            detail=(
-                f"Place with id {place_id} not found"
-            ),
+            detail=f"Place with id {place_id} not found",
         )
 
     return {
