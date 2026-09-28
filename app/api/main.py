@@ -1,5 +1,8 @@
+import os
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from app.database.session import SessionLocal
@@ -75,6 +78,8 @@ app = FastAPI(
     title="PlantBrain API",
     version="0.1.0",
 )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -85,6 +90,40 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ---------------------------------------------------------
+# Public Demo Protection
+# ---------------------------------------------------------
+
+DEMO_MODE = os.getenv("PLANTBRAIN_DEMO_MODE", "").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
+
+READ_ONLY_METHODS = {
+    "GET",
+    "HEAD",
+    "OPTIONS",
+}
+
+
+@app.middleware("http")
+async def protect_public_demo(request, call_next):
+    if DEMO_MODE and request.method not in READ_ONLY_METHODS:
+        return JSONResponse(
+            status_code=403,
+            content={
+                "detail": (
+                    "PlantBrain public demo is read-only. "
+                    "Data modifications are disabled."
+                )
+            },
+        )
+
+    return await call_next(request)
 
 
 def get_session():
@@ -106,7 +145,6 @@ def health_check():
 # ---------------------------------------------------------
 # Plants
 # ---------------------------------------------------------
-
 
 @app.post(
     "/plants",
@@ -332,7 +370,6 @@ def delete_plant_endpoint(
 # Plant Events
 # ---------------------------------------------------------
 
-
 @app.get(
     "/plants/{plant_id}/events",
     response_model=list[PlantEventResponse],
@@ -447,7 +484,6 @@ def delete_event_endpoint(
 # Weather Snapshots
 # ---------------------------------------------------------
 
-
 @app.post(
     "/plant-events/{event_id}/weather",
     response_model=WeatherSnapshotResponse,
@@ -514,11 +550,9 @@ def get_weather_snapshot_endpoint(
     event_id: int,
     session: Session = Depends(get_session),
 ):
-    snapshot = (
-        get_weather_snapshot_by_event_id(
-            session=session,
-            event_id=event_id,
-        )
+    snapshot = get_weather_snapshot_by_event_id(
+        session=session,
+        event_id=event_id,
     )
 
     if snapshot is None:
@@ -592,7 +626,6 @@ def delete_weather_snapshot_endpoint(
 # ---------------------------------------------------------
 # Places
 # ---------------------------------------------------------
-
 
 @app.post(
     "/places",
