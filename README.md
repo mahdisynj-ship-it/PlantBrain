@@ -2,6 +2,16 @@
 
 **A data-driven plant care system that turns care history into transparent, explainable insights.**
 
+### Live Demo
+
+**Frontend:** https://mahdisynj-ship-it.github.io/PlantBrain/
+
+**Public API:** https://mahdisynj.pythonanywhere.com
+
+The public portfolio demo runs with a read-only backend configuration. Visitors can explore the dashboard, plant details, care history, analytics, and recommendations without modifying the shared demo dataset.
+
+**Deployment:** React/Vite frontend on GitHub Pages · FastAPI backend on PythonAnywhere · SQLite demo database
+
 PlantBrain is a full-stack portfolio project exploring how structured plant-care records can be transformed into useful recommendations through simple statistical analysis and deterministic rules.
 
 Rather than acting only as a CRUD tracker or fixed reminder system, PlantBrain analyzes a plant's own recorded care history, identifies patterns in watering behavior, evaluates current watering timing, and presents the reasoning through a responsive interface.
@@ -126,22 +136,22 @@ Plant
   └── Weather Snapshots
           │
           ▼
-     Structured History
+      Structured History
           │
           ▼
-     Care Statistics
+      Care Statistics
           │
           ▼
-     Pattern Analysis
+      Pattern Analysis
           │
           ▼
-     Watering Analysis
+      Watering Analysis
           │
           ▼
-        Insight
+         Insight
           │
           ▼
-   Recommendation
+    Recommendation
           │
           ▼
          UI
@@ -192,6 +202,8 @@ PlantBrain v1 currently includes:
 - Watering consistency visualization
 - REST API
 - Automated test suite
+- Read-only public demo mode
+- Public frontend and backend deployment
 
 ---
 
@@ -472,7 +484,9 @@ Authentication is intentionally outside the v1 scope.
 
 Implementing accounts, sessions, authorization, password recovery, and user ownership would add substantial product surface without strengthening the central data-to-insight demonstration.
 
-If the project is deployed publicly, the portfolio demo should therefore be exposed in a **read-only or otherwise protected demo configuration** so visitors cannot modify the shared dataset.
+The deployed portfolio version therefore runs in **read-only demo mode**. Public visitors can inspect the shared dataset and analytical results, while data-modifying requests are rejected by the backend.
+
+This keeps the live project explorable without introducing a full authentication system solely for demonstration purposes.
 
 ### Why Deterministic Demo Data?
 
@@ -623,6 +637,13 @@ The frontend retrieves analytical results from the API rather than reproducing t
 
 - Open-Meteo
 
+### Deployment
+
+- GitHub Pages — frontend
+- PythonAnywhere — FastAPI backend
+- GitHub Actions — frontend build and deployment
+- SQLite — deterministic public demo dataset
+
 ---
 
 ## API
@@ -665,6 +686,8 @@ Example:
 
 FastAPI provides interactive OpenAPI documentation while the backend is running.
 
+The public deployment exposes read operations for portfolio exploration while data-modifying requests are blocked in demo mode.
+
 ---
 
 ## Demo Data
@@ -688,6 +711,8 @@ insufficient_data
 
 Demo records are explicitly marked so they can be distinguished from other local records.
 
+The deployed portfolio demo uses this deterministic dataset so analytical behavior is immediately visible to reviewers.
+
 ---
 
 ## Testing
@@ -705,11 +730,12 @@ The automated test suite covers areas including:
 - care analysis
 - care patterns
 - insight generation
+- public demo read-only behavior
 
 Current PlantBrain v1 checkpoint:
 
 ```text
-158 tests passing
+163 tests passing
 ```
 
 Run the suite with:
@@ -786,10 +812,54 @@ http://localhost:5173
 
 ## Production Build
 
+The frontend API URL can be configured through:
+
+```text
+VITE_API_BASE_URL
+```
+
+Build the frontend with:
+
 ```bash
 cd frontend
 npm run build
 ```
+
+The public GitHub Pages deployment injects the deployed backend URL during the GitHub Actions build.
+
+---
+
+## Public Demo Deployment
+
+The portfolio version is deployed as a split frontend/backend application:
+
+```text
+GitHub Pages
+     │
+     │ HTTPS / JSON
+     ▼
+PythonAnywhere
+     │
+     ▼
+FastAPI
+     │
+     ▼
+SQLite Demo Database
+```
+
+The frontend is built with Vite and deployed automatically through GitHub Actions.
+
+The backend runs the FastAPI application on PythonAnywhere and uses the deterministic SQLite demo dataset.
+
+The deployed backend runs with:
+
+```text
+PLANTBRAIN_DEMO_MODE=true
+```
+
+In this mode, read requests remain available while data-modifying requests are rejected.
+
+This allows reviewers to explore the application without changing the shared portfolio dataset.
 
 ---
 
@@ -819,6 +889,8 @@ See [`PLANTBRAIN_V1_SCOPE.md`](PLANTBRAIN_V1_SCOPE.md) for the dedicated scope d
 
 ## Current Status
 
+PlantBrain v1 is feature-complete and publicly deployed as a portfolio demo.
+
 Implemented:
 
 - relational backend data model
@@ -832,20 +904,23 @@ Implemented:
 - care-history statistics
 - care-pattern analysis
 - watering analysis
-- insight generation
+- explainable insight generation
 - deterministic demo data
 - responsive React dashboard
 - plant-detail analytics
 - care visualizations
-- automated tests
+- automated test suite
 - architecture documentation
 - product screenshots
+- GitHub Pages frontend deployment
+- FastAPI backend deployment
+- read-only public demo protection
+- live frontend-to-API integration
 
-Portfolio finishing work:
+Remaining portfolio work:
 
-- public demo deployment
-- portfolio case study
 - final repository cleanup
+- portfolio case study presentation
 
 ---
 
@@ -865,6 +940,7 @@ PlantBrain was built to demonstrate work across:
 - data visualization
 - responsive UI design
 - technical documentation
+- deployment
 - explainable data-driven decision support
 
 The central idea is not simply to store plant-care data.
